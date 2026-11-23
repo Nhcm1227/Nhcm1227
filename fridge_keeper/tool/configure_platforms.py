@@ -88,6 +88,25 @@ def gradle_groovy(s: str):
     return s
 
 
+PROGUARD_RULES = """# ML Kit text recognition tham chiếu các gói ngôn ngữ không dùng tới.
+-dontwarn com.google.mlkit.vision.text.chinese.**
+-dontwarn com.google.mlkit.vision.text.devanagari.**
+-dontwarn com.google.mlkit.vision.text.japanese.**
+-dontwarn com.google.mlkit.vision.text.korean.**
+"""
+
+
+def proguard(path: pathlib.Path):
+    """Flutter tự nạp android/app/proguard-rules.pro khi build release."""
+    old = path.read_text(encoding="utf-8") if path.exists() else ""
+    if "com.google.mlkit.vision.text.chinese" in old:
+        print("• Android ProGuard rules: đã cấu hình sẵn")
+        return
+    path.write_text(old + ("\n" if old and not old.endswith("\n") else "") + PROGUARD_RULES,
+                    encoding="utf-8")
+    print(f"✔ Android ProGuard rules: {path.relative_to(ROOT)}")
+
+
 # --------------------------------------------------------------------------- iOS
 
 IOS_MIN = "15.5"  # Google ML Kit yêu cầu iOS 15.5+
@@ -162,6 +181,8 @@ def main():
         sys.exit(1)
 
     patch(android / "src" / "main" / "AndroidManifest.xml", manifest, "Android quyền + receiver thông báo")
+    if android.exists():
+        proguard(android / "proguard-rules.pro")
     kts = android / "build.gradle.kts"
     if kts.exists():
         patch(kts, gradle_kts, "Android desugaring + minSdk")
