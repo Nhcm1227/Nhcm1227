@@ -1,0 +1,41 @@
+name: fridge_keeper
+description: Quản lý hạn sử dụng đồ ăn trong tủ lạnh, nhắc trước khi hết hạn và gợi ý món ăn.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Trạng thái
+  provider: ^6.1.2
+
+  # Lưu trữ
+  shared_preferences: ^2.3.2
+  path_provider: ^2.1.4
+
+  # Camera / thư viện ảnh
+  image_picker: ^1.1.2
+
+  # Nhận diện chữ (OCR) và nhận diện vật thể — chạy offline trên máy
+  google_mlkit_text_recognition: ^0.15.0
+  google_mlkit_image_labeling: ^0.14.0
+
+  # Thông báo nội bộ
+  flutter_local_notifications: ^19.4.0
+  timezone: ^0.10.0
+
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
