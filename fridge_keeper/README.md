@@ -18,6 +18,16 @@ trước khi hết hạn và gợi ý món ăn để dùng hết đồ sắp h�
 
 Mọi dữ liệu (danh sách, ảnh) lưu ngay trên điện thoại.
 
+## Tải bản build sẵn (không cần cài Flutter)
+
+Mỗi lần đẩy code, GitHub Actions (`.github/workflows/build-fridge-keeper.yml`) tự build:
+
+- **FridgeKeeper-Android** → file `.apk`, cài thẳng lên điện thoại Android.
+- **FridgeKeeper-iOS** → file `.ipa` chưa ký. Cài lên iPhone từ Windows/Mac bằng
+  [Sideloadly](https://sideloadly.io) với Apple ID (miễn phí: app chạy 7 ngày rồi cài lại).
+
+Vào tab **Actions** của repo → chọn lần build mới nhất → mục **Artifacts** ở cuối trang.
+
 ## Cài đặt & chạy
 
 Cần [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.27 trở lên).
