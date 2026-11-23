@@ -13,11 +13,11 @@
    Cố ý chỉ một giao diện tối: trang này là căn phòng không bật đèn. */
 :root {
   color-scheme: dark;
-  --void: #070606;
-  --ash: #12100F;
-  --bone: #D8D0BF;
-  --bone-dim: #8E877A;
-  --rust: #2A2421;
+  --void: #0F0D0C;
+  --ash: #1A1716;
+  --bone: #E8E1D3;
+  --bone-dim: #ABA396;
+  --rust: #3A322E;
   --blood: #A8120C;
   --blood-hi: #D21A12;
   --blood-glow: rgba(168, 18, 12, .35);
@@ -53,12 +53,8 @@ section { display: flex; flex-direction: column; gap: 22px; }
 .head-block { display: flex; flex-direction: column; gap: 14px; }
 
 /* ---------- atmosphere ---------- */
-#grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .09; mix-blend-mode: screen; }
-.lamp {
-  position: fixed; inset: 0; pointer-events: none; z-index: 40;
-  background: radial-gradient(circle 460px at var(--mx, 50%) var(--my, 30%), transparent 0, rgba(0,0,0,.18) 55%, rgba(0,0,0,.6) 100%);
-}
-.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 41; box-shadow: inset 0 0 180px 40px #000; }
+#grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .035; mix-blend-mode: screen; }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 41; box-shadow: inset 0 0 120px 0 rgba(0,0,0,.55); }
 
 /* ---------- top ---------- */
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -84,7 +80,7 @@ button[aria-pressed="true"], .btn-blood { background: var(--blood); border-color
 
 /* ---------- hero ---------- */
 .hero { display: flex; flex-direction: column; gap: 10px; }
-.hero .label { color: var(--blood-hi); animation: blink 4s steps(1) infinite; }
+.hero .label { color: var(--blood-hi); }
 .days {
   font-family: var(--f-goth); font-weight: 900; line-height: .78;
   font-size: clamp(6rem, 25vw, 17rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
@@ -209,6 +205,27 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
 .limit.hit { color: var(--blood-hi); }
 .lock { font-family: var(--f-mono); font-size: .72rem; color: var(--blood-hi); letter-spacing: .08em; }
 
+/* ---------- market ---------- */
+.market { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.wares { display: flex; flex-direction: column; }
+.ware { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rust); }
+.ware .wname { font-size: 1.05rem; }
+.ware .wsrc { display: block; font-size: .78rem; color: var(--bone-dim); font-style: italic; }
+.ware .wval { font-family: var(--f-mono); font-weight: 600; white-space: nowrap; color: var(--moss); }
+.ware.sell .wval { color: var(--blood-hi); }
+.ware .wcount { display: block; font-family: var(--f-mono); font-size: .72rem; color: var(--bone-dim); font-style: normal; }
+.ware button { min-width: 92px; }
+.ware.sell button { border-color: var(--blood); }
+.ware-group { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); padding: 18px 0 4px; }
+.balance .n { font-family: var(--f-goth); font-weight: 900; font-size: 3.6rem; line-height: .9; }
+.balance .n.pos { color: var(--moss); }
+.balance .n.neg { color: var(--blood-hi); }
+.log { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.log li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rust); }
+.log .lv { font-family: var(--f-mono); font-size: .8rem; }
+.log .lv.pos { color: var(--moss); } .log .lv.neg { color: var(--blood-hi); }
+.log button { padding: 2px 8px; border: none; color: var(--bone-dim); letter-spacing: 0; font-size: .95rem; }
+
 /* ---------- pricing ---------- */
 .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
 .plan { border: 1px solid var(--rust); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
@@ -251,7 +268,11 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   .cert dt { margin-top: 8px; }
   .cert-foot { padding-right: 0; padding-bottom: 70px; }
   .stamp { bottom: 22px; }
-  .tracker { grid-template-columns: minmax(0, 1fr); }
+  .tracker, .market { grid-template-columns: minmax(0, 1fr); }
+  .ware { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; }
+  .ware > span:first-child { grid-column: 1 / -1; }
+  .ware .wval { justify-self: start; }
+  .balance .n { font-size: 2.6rem; }
   .addform { grid-template-columns: minmax(0, 1fr); }
   body { font-size: 16px; }
 }
@@ -263,7 +284,6 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
 </head>
 <body>
 <canvas id="grain" aria-hidden="true"></canvas>
-<div class="lamp" id="lamp" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
 
 <div class="wrap">
@@ -274,6 +294,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
       <div class="top-actions">
         <button id="heartBtn" type="button" aria-pressed="false">Nghe nhịp tim</button>
         <button id="jumpTasks" type="button">Sổ việc</button>
+        <button id="jumpMarket" type="button">Mua giờ sống</button>
         <button id="jumpForm" type="button">Khai hồ sơ</button>
       </div>
     </header>
@@ -358,8 +379,29 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     </div>
   </section>
 
+  <section id="marketSec">
+    <p class="label">Văn bản số 03: chợ giờ sống</p>
+    <h2>Mua thêm giờ sống</h2>
+    <p class="lede">Không ai bán giờ sống bằng tiền. Ở đây bạn trả bằng mồ hôi. Mỗi lần làm một việc tốt cho cơ thể, bấm Mua và số giờ được cộng thẳng vào đồng hồ. Mỗi điếu thuốc, mỗi ly rượu thì ngược lại: bạn đang bán đi giờ sống của mình.</p>
+    <div class="market">
+      <div class="wares" id="wares"></div>
+      <div class="side">
+        <div class="balance">
+          <span class="label">Số dư giờ sống</span>
+          <div class="n mono" id="balTotal">0</div>
+          <p class="hint" id="balToday">Hôm nay: 0</p>
+        </div>
+        <div>
+          <span class="label">Giao dịch gần đây</span>
+          <ul class="log" id="buyLog"></ul>
+        </div>
+        <p class="note-box">Số giờ là mức trung bình rút ra từ các nghiên cứu lớn, áp dụng cho cả một quần thể, không phải lời hứa cho riêng ai. Mỗi mục có giới hạn trong ngày vì cơ thể không cộng dồn vô hạn.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="formSec">
-    <p class="label">Văn bản số 03: tờ khai</p>
+    <p class="label">Văn bản số 04: tờ khai</p>
     <h2>Khai thật. Cái chết không nghe lời nói dối.</h2>
     <p class="lede" id="sampleNote">Đang dùng hồ sơ mẫu (nam, sinh 01/01/2000). Sửa từng ô bên dưới, mọi con số trên trang sẽ đổi theo ngay. Dữ liệu chỉ nằm trong trình duyệt của bạn.</p>
     <div class="form">
@@ -406,7 +448,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   </section>
 
   <section>
-    <p class="label">Văn bản số 04: biên bản tính toán</p>
+    <p class="label">Văn bản số 05: biên bản tính toán</p>
     <h2>Từng năm được cộng, từng năm bị lấy đi</h2>
     <p class="lede">Bắt đầu từ tuổi thọ trung bình của người Việt cùng giới tính, rồi cộng trừ theo thói quen và bệnh của bạn. Nhiều bệnh cùng lúc không cộng dồn hết, vì chúng thường chồng lên nhau: bệnh nặng nhất tính đủ, các bệnh sau giảm dần.</p>
     <div class="ledger-wrap">
@@ -418,13 +460,13 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   </section>
 
   <section>
-    <p class="label">Văn bản số 05: kiểm kê</p>
+    <p class="label">Văn bản số 06: kiểm kê</p>
     <h2>Bạn còn bao nhiêu lần nữa?</h2>
     <div class="counts" id="counts"></div>
   </section>
 
   <section>
-    <p class="label">Văn bản số 06: sổ tuần</p>
+    <p class="label">Văn bản số 07: sổ tuần</p>
     <h2>Mỗi dấu gạch là một tuần đã chôn</h2>
     <p class="lede">Mỗi hàng là một năm, mỗi ký hiệu là một tuần. Dấu × là tuần đã qua. Ô đỏ là tuần này. Dấu chấm là những tuần bạn vẫn còn, nếu dự báo đúng.</p>
     <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
@@ -432,7 +474,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   </section>
 
   <section id="planSec">
-    <p class="label">Văn bản số 07: gia hạn</p>
+    <p class="label">Văn bản số 08: gia hạn</p>
     <h2>Gia hạn kỷ luật, không gia hạn được tuổi thọ</h2>
     <p class="lede">Mọi người được dùng đầy đủ 3 ngày miễn phí. Sau đó chọn ở lại gói miễn phí, hoặc trả 24.000đ mỗi tháng, rẻ hơn một ly trà sữa.</p>
     <div class="plans">
@@ -595,8 +637,67 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   $("jumpTasks").addEventListener("click", function () { jump("tasksSec", "newTitle"); });
   function commit() { save("dhdn-cfg2", cfg); recompute(); }
 
+  // ================= CHỢ GIỜ SỐNG =================
+  var WARES = [
+    { id: "run", name: "Chạy bộ 1 giờ", h: 7, cap: 2, src: "Lee et al., Progress in Cardiovascular Diseases 2017" },
+    { id: "walk", name: "Đi bộ nhanh 30 phút", h: 2.5, cap: 4, src: "Quy đổi từ Moore et al., PLoS Medicine 2012" },
+    { id: "stand", name: "Đứng dậy vận động thay vì ngồi 1 giờ", h: 22 / 60, cap: 8, src: "Veerman et al., Br J Sports Med 2012" },
+    { id: "smoke", name: "Hút 1 điếu thuốc", h: -20 / 60, cap: 60, src: "Jackson et al., UCL, Addiction 2025", sell: true },
+    { id: "drink", name: "Uống 1 ly rượu bia vượt mức khuyến cáo", h: -15 / 60, cap: 30, src: "Spiegelhalter, dựa trên Wood et al., Lancet 2018", sell: true },
+    { id: "screen", name: "Ngồi xem màn hình thêm 1 giờ", h: -22 / 60, cap: 16, src: "Veerman et al., Br J Sports Med 2012", sell: true }
+  ];
+  var bought = load("dhdn-bought", []);
+  function boughtHours() { return bought.reduce(function (s, e) { return s + e.h; }, 0); }
+  function hstr(h) {
+    var sign = h > 0 ? "+" : h < 0 ? "−" : "", a = Math.abs(h), H = Math.floor(a), M = Math.round((a - H) * 60);
+    if (M === 60) { H++; M = 0; }
+    return sign + (H ? H + " giờ" : "") + (H && M ? " " : "") + (M || !H ? M + " phút" : "");
+  }
+  function todayCount(id) { var sod = new Date(); sod.setHours(0, 0, 0, 0); return bought.filter(function (e) { return e.id === id && e.at >= sod.getTime(); }).length; }
+  function renderMarket() {
+    var html = "", group = "";
+    WARES.forEach(function (w) {
+      var g = w.sell ? "Bán đi giờ sống" : "Mua thêm giờ sống";
+      if (g !== group) { group = g; html += '<div class="ware-group">' + g + "</div>"; }
+      var n = todayCount(w.id), full = n >= w.cap;
+      html += '<div class="ware' + (w.sell ? " sell" : "") + '"><span><span class="wname">' + w.name + '</span><span class="wsrc">' + w.src +
+        '</span><span class="wcount">Hôm nay: ' + n + "/" + w.cap + (full ? " · đủ cho hôm nay" : "") + '</span></span><span class="wval">' + hstr(w.h) +
+        '</span><button type="button" data-ware="' + w.id + '"' + (full ? " disabled" : "") + ">" + (w.sell ? "Đã lỡ" : "Mua") + "</button></div>";
+    });
+    $("wares").innerHTML = html;
+    var tot = boughtHours(), sod = new Date(); sod.setHours(0, 0, 0, 0);
+    var today = bought.filter(function (e) { return e.at >= sod.getTime(); }).reduce(function (s, e) { return s + e.h; }, 0);
+    var bt = $("balTotal"); bt.textContent = hstr(tot); bt.className = "n mono " + (tot > 0 ? "pos" : tot < 0 ? "neg" : "");
+    $("balToday").textContent = "Hôm nay: " + hstr(today);
+    var recent = bought.slice(-6).reverse();
+    $("buyLog").innerHTML = recent.length ? recent.map(function (e) {
+      var w = WARES.find(function (x) { return x.id === e.id; }) || { name: e.id }, d = new Date(e.at);
+      return '<li><span>' + w.name + ' <span class="hint">' + pad(d.getHours()) + ":" + pad(d.getMinutes()) + '</span></span><span class="lv ' + (e.h > 0 ? "pos" : "neg") + '">' + hstr(e.h) +
+        '</span><button type="button" data-undo="' + e.at + '" aria-label="Hoàn tác">↺</button></li>';
+    }).join("") : '<li><span class="hint">Chưa có giao dịch nào.</span></li>';
+  }
+  $("wares").addEventListener("click", function (e) {
+    var id = e.target.dataset && e.target.dataset.ware; if (!id) return;
+    var w = WARES.find(function (x) { return x.id === id; });
+    if (!w || todayCount(id) >= w.cap) return;
+    bought.push({ id: id, h: w.h, at: Date.now() }); save("dhdn-bought", bought);
+    renderMarket(); recompute();
+  });
+  $("buyLog").addEventListener("click", function (e) {
+    var at = e.target.dataset && e.target.dataset.undo; if (!at) return;
+    bought = bought.filter(function (x) { return String(x.at) !== at; }); save("dhdn-bought", bought);
+    renderMarket(); recompute();
+  });
+  $("jumpMarket").addEventListener("click", function () { jump("marketSec"); });
+
   function recompute() {
     result = compute(cfg);
+    var bh = boughtHours();
+    if (bought.length) {
+      var extraY = bh / (365.2425 * 24);
+      result.rows.push({ k: "Chợ giờ sống", v: hstr(bh), y: extraY, src: "Tổng các lần mua và bán trong Chợ giờ sống" });
+      result.total = Math.min(105, Math.max(result.ageNow + 1 / 365, result.total + extraY));
+    }
     var b = birthOf(cfg);
     deathAt = new Date(b.getTime() + result.total * YEAR);
     $("sampleNote").hidden = !!cfg.birth;
@@ -646,7 +747,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     var s = now.getSeconds();
     if (s !== lastSec) {
       lastSec = s;
-      if (!reduce && Math.random() < 0.12) { var el = $("bigDays"); el.classList.remove("glitch"); void el.offsetWidth; el.classList.add("glitch"); }
+      if (!reduce && Math.random() < 0.04) { var el = $("bigDays"); el.classList.remove("glitch"); void el.offsetWidth; el.classList.add("glitch"); }
       if (heartOn) beat();
       if (s % 15 === 0) renderTasks(); // cập nhật nhãn "còn X phút"
       checkReminders(now.getTime());
@@ -908,8 +1009,6 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   function paintGrain() { var d = gImg.data; for (var i = 0; i < d.length; i += 4) { var v = Math.random() * 255 | 0; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gctx.putImageData(gImg, 0, 0); }
   sizeGrain(); paintGrain();
   if (!reduce) setInterval(paintGrain, 90);
-  var lamp = $("lamp");
-  window.addEventListener("pointermove", function (e) { lamp.style.setProperty("--mx", e.clientX + "px"); lamp.style.setProperty("--my", e.clientY + "px"); }, { passive: true });
 
   var heartOn = false, actx;
   $("heartBtn").addEventListener("click", function () {
@@ -929,9 +1028,9 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   var opened = Date.now();
   function onPage() { var s = Math.floor((Date.now() - opened) / 1000); $("onPage").textContent = s < 60 ? s + " giây" : Math.floor(s / 60) + " phút " + (s % 60) + " giây"; }
 
-  recompute(); renderPlan(); renderTasks(); showQ(); onPage();
+  renderMarket(); recompute(); renderPlan(); renderTasks(); showQ(); onPage();
   setInterval(function () { tick(); onPage(); }, 250);
-  setInterval(renderCounts, 60000);
+  setInterval(function () { renderCounts(); renderMarket(); }, 60000);
   window.__dhdn = { compute: compute, plan: function () { return plan; } };
 })();
 </script>
