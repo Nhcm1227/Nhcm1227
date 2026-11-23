@@ -1,0 +1,66 @@
+name: Build FridgeKeeper
+
+on:
+  push:
+    branches: [claude/jolly-maxwell-jvq0e9]
+    paths:
+      - 'fridge_keeper/**'
+      - '.github/workflows/build-fridge-keeper.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: fridge_keeper
+
+jobs:
+  ios:
+    name: iOS (unsigned .ipa)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate & configure platforms
+        run: |
+          flutter create --platforms=ios --org com.nhcm --project-name fridge_keeper .
+          python3 tool/configure_platforms.py
+          flutter pub get
+      - run: flutter test
+      - name: Build (no code signing)
+        run: flutter build ios --release --no-codesign
+      - name: Package .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry FridgeKeeper-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FridgeKeeper-iOS
+          path: fridge_keeper/FridgeKeeper-unsigned.ipa
+
+  android:
+    name: Android (.apk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate & configure platforms
+        run: |
+          flutter create --platforms=android --org com.nhcm --project-name fridge_keeper .
+          python3 tool/configure_platforms.py
+          flutter pub get
+      - name: Build APK
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FridgeKeeper-Android
+          path: fridge_keeper/build/app/outputs/flutter-apk/app-release.apk
