@@ -2,566 +2,929 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Be+Vietnam+Pro:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700;900&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: một ngọn nến cháy dần làm trục; mọi con số khác xoay quanh câu hỏi "còn bao nhiêu" */
+/* Layout: một hồ sơ khám nghiệm đọc từ trên xuống: đồng hồ, giấy báo tử, tờ khai, biên bản, sổ việc, gia hạn.
+   Cố ý chỉ một giao diện tối: trang này là căn phòng không bật đèn. */
 :root {
-  --bg: #E9ECEF;
-  --surface: #F7F8F9;
-  --ink: #14171C;
-  --muted: #59606C;
-  --line: #CDD2D9;
-  --ember: #C8430B;
-  --ember-soft: rgba(200, 67, 11, .12);
-  --wax: #FFFFFF;
-  --wax-edge: #D4D8DE;
-  --cell-empty: #CDD2D9;
-  --cell-past: #59606C;
-  --good: #1F7A4D;
-  --f-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
-  --f-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: dark;
+  --void: #070606;
+  --ash: #12100F;
+  --bone: #D8D0BF;
+  --bone-dim: #8E877A;
+  --rust: #2A2421;
+  --blood: #A8120C;
+  --blood-hi: #D21A12;
+  --blood-glow: rgba(168, 18, 12, .35);
+  --moss: #8FA88A;
+  --paper: #CFC5AE;
+  --paper-ink: #1B1510;
+  --paper-line: #8C7F66;
+  --f-goth: "Grenze Gotisch", "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
+  --f-body: "Spectral", Georgia, "Times New Roman", serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0D1015; --surface: #151920; --ink: #E8EBF0; --muted: #8B93A1; --line: #262C36;
-    --ember: #FF7B3A; --ember-soft: rgba(255, 123, 58, .14); --wax: #E6E1D6; --wax-edge: #9C968A;
-    --cell-empty: #2A303A; --cell-past: #7C8494; --good: #4CC38A; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0D1015; --surface: #151920; --ink: #E8EBF0; --muted: #8B93A1; --line: #262C36;
-  --ember: #FF7B3A; --ember-soft: rgba(255, 123, 58, .14); --wax: #E6E1D6; --wax-edge: #9C968A;
-  --cell-empty: #2A303A; --cell-past: #7C8494; --good: #4CC38A; color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--void); }
 body {
-  background: var(--bg); color: var(--ink);
-  font-family: var(--f-body); font-size: 16px; line-height: 1.6;
+  background: var(--void); color: var(--bone);
+  font-family: var(--f-body); font-size: 17px; line-height: 1.6;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 24px 96px;
+  padding-block: 20px 110px;
+  overflow-x: hidden;
 }
-.wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
-h1, h2 { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .01em; line-height: 1; margin: 0; text-wrap: balance; }
-h2 { font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 800; }
+::selection { background: var(--blood); color: var(--bone); }
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 84px; position: relative; z-index: 2; }
+h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-family: var(--f-goth); font-size: clamp(2.4rem, 7vw, 4rem); line-height: .95; letter-spacing: .005em; }
 p { margin: 0; }
-.eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.lede { color: var(--muted); max-width: 62ch; }
-.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-section { display: flex; flex-direction: column; gap: 20px; }
+.label { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); }
+.lede { color: var(--bone-dim); max-width: 60ch; font-style: italic; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 22px; }
+.red { color: var(--blood-hi); }
+.head-block { display: flex; flex-direction: column; gap: 14px; }
 
-/* top bar */
-.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.brand { font-family: var(--f-display); font-weight: 900; font-size: 1.4rem; text-transform: uppercase; letter-spacing: .04em; }
-.brand span { color: var(--ember); }
-button, .btn {
-  font: inherit; font-size: .9rem; font-weight: 500; cursor: pointer;
-  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-  border-radius: 999px; padding: 8px 16px;
+/* ---------- atmosphere ---------- */
+#grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .09; mix-blend-mode: screen; }
+.lamp {
+  position: fixed; inset: 0; pointer-events: none; z-index: 40;
+  background: radial-gradient(circle 460px at var(--mx, 50%) var(--my, 30%), transparent 0, rgba(0,0,0,.18) 55%, rgba(0,0,0,.6) 100%);
 }
-button:hover { border-color: var(--ink); }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
-.btn-ember { background: var(--ember); border-color: var(--ember); color: #fff; }
-.btn-ember:hover { filter: brightness(1.08); border-color: var(--ember); }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 41; box-shadow: inset 0 0 180px 40px #000; }
 
-/* hero */
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 32px; align-items: end; }
-.hero-text { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.big {
-  font-family: var(--f-display); font-weight: 900; line-height: .85;
-  font-size: clamp(5rem, 20vw, 13rem); letter-spacing: -.01em; font-variant-numeric: tabular-nums;
+/* ---------- top ---------- */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--f-goth); font-size: 1.7rem; font-weight: 900; line-height: 1; }
+.brand span { color: var(--blood-hi); }
+.top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+button {
+  font-family: var(--f-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; color: var(--bone); background: transparent;
+  border: 1px solid var(--rust); padding: 10px 16px; border-radius: 0;
+}
+button:hover { border-color: var(--blood-hi); color: #fff; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--blood-hi); outline-offset: 3px; }
+button[aria-pressed="true"], .btn-blood { background: var(--blood); border-color: var(--blood); color: #fff; }
+.btn-blood:hover { background: var(--blood-hi); border-color: var(--blood-hi); }
+.planbar {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px;
+  border: 1px solid var(--rust); padding: 8px 12px; font-family: var(--f-mono); font-size: .78rem; color: var(--bone-dim);
+}
+.planbar b { color: var(--bone); font-weight: 600; }
+.planbar.expired { border-color: var(--blood); color: var(--bone); }
+.planbar button { padding: 6px 12px; }
+
+/* ---------- hero ---------- */
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.hero .label { color: var(--blood-hi); animation: blink 4s steps(1) infinite; }
+.days {
+  font-family: var(--f-goth); font-weight: 900; line-height: .78;
+  font-size: clamp(6rem, 25vw, 17rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  color: var(--bone); text-shadow: 0 0 60px var(--blood-glow);
   overflow-wrap: anywhere;
 }
-.big-unit { font-family: var(--f-display); font-weight: 800; font-size: clamp(1.6rem, 4vw, 2.4rem); text-transform: uppercase; }
-.tick { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: clamp(1rem, 2.6vw, 1.35rem); }
-.tick b { font-family: var(--f-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
-.tick small { color: var(--muted); font-size: .8em; margin-left: 4px; }
-.seconds-line { color: var(--muted); font-size: .95rem; }
-.seconds-line b { color: var(--ember); font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.days.glitch { animation: glitch .22s steps(2) 1; }
+.days-unit { font-family: var(--f-body); font-style: italic; font-size: clamp(1.3rem, 3.4vw, 2rem); color: var(--bone-dim); }
+.clock { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-family: var(--f-mono); }
+.clock div { display: flex; flex-direction: column; }
+.clock b { font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.clock span { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); }
+.clock .sec b { color: var(--blood-hi); }
+.pulse-line { margin-top: 14px; color: var(--bone-dim); font-size: .95rem; }
+.pulse-line b { font-family: var(--f-mono); color: var(--bone); font-weight: 400; }
 
-/* candle */
-.candle { height: 300px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
-.flame-box { height: 70px; width: 100%; display: flex; justify-content: center; align-items: flex-end; }
-.flame {
-  width: 26px; height: 56px; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
-  background: radial-gradient(ellipse at 50% 75%, #FFF6D6 0 18%, #FFC24A 38%, var(--ember) 80%);
-  box-shadow: 0 0 40px 10px var(--ember-soft), 0 0 90px 30px var(--ember-soft);
-  transform-origin: 50% 100%; animation: flicker 2.4s ease-in-out infinite;
-}
-.wick { width: 3px; height: 10px; background: var(--ink); border-radius: 2px; }
-.wax {
-  width: 64px; background: var(--wax); border: 1px solid var(--wax-edge); border-bottom: none;
-  border-radius: 10px 10px 0 0; position: relative; transition: height .8s ease;
-}
-.wax::before { content: ""; position: absolute; left: 10px; top: -1px; width: 10px; height: 34px; background: var(--wax); border: 1px solid var(--wax-edge); border-top: none; border-radius: 0 0 6px 6px; }
-.plate { width: 120px; height: 10px; background: var(--line); border-radius: 50%; }
-.candle-label { margin-top: 10px; font-size: .8rem; color: var(--muted); text-align: center; }
-@keyframes flicker {
-  0%, 100% { transform: scale(1, 1) rotate(-1deg); }
-  25% { transform: scale(.94, 1.06) rotate(2deg); }
-  50% { transform: scale(1.04, .95) rotate(-2deg); }
-  75% { transform: scale(.97, 1.03) rotate(1deg); }
+@keyframes blink { 0%, 92% { opacity: 1; } 93% { opacity: .2; } 95% { opacity: 1; } 97% { opacity: .35; } }
+@keyframes glitch {
+  0% { transform: translate(-4px, 1px) skewX(-6deg); text-shadow: 6px 0 var(--blood), -6px 0 #2a6f73; }
+  50% { transform: translate(5px, -2px) skewX(4deg); text-shadow: -8px 0 var(--blood), 4px 0 #2a6f73; clip-path: inset(10% 0 35% 0); }
+  100% { transform: none; text-shadow: 0 0 60px var(--blood-glow); }
 }
 
-/* today strip */
-.today {
-  border: 1px solid var(--ember); background: var(--ember-soft); border-radius: 14px;
-  padding: 20px 22px; display: flex; flex-direction: column; gap: 14px;
+/* ---------- death certificate ---------- */
+.cert {
+  background: var(--paper); color: var(--paper-ink);
+  background-image:
+    radial-gradient(ellipse at 18% 12%, rgba(90, 60, 20, .22), transparent 45%),
+    radial-gradient(ellipse at 88% 90%, rgba(70, 40, 10, .28), transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(60, 40, 20, .07) 31px 32px);
+  padding: clamp(22px, 5vw, 48px); position: relative; transform: rotate(-.6deg);
+  box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px #000;
+  max-width: 760px; width: 100%; align-self: center;
 }
-.today-head { font-size: clamp(1.1rem, 2.6vw, 1.4rem); font-weight: 700; }
-.today-head b { color: var(--ember); font-family: var(--f-mono); }
-.bars { display: grid; gap: 10px; }
-.bar-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 64px; gap: 12px; align-items: center; font-size: .9rem; }
-.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--ember); border-radius: 99px; }
-.bar-row .num { text-align: right; color: var(--muted); }
+.cert-inner { border: 2px solid var(--paper-ink); outline: 1px solid var(--paper-ink); outline-offset: 4px; padding: clamp(16px, 4vw, 32px); display: flex; flex-direction: column; gap: 18px; }
+.cert-head { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.cert-head .gov { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; }
+.cert-head h3 { font-family: var(--f-goth); font-size: clamp(2.4rem, 8vw, 3.8rem); font-weight: 900; line-height: 1; }
+.cert-head .no { font-family: var(--f-mono); font-size: .75rem; }
+.cert dl { margin: 0; display: grid; grid-template-columns: minmax(0, 13em) minmax(0, 1fr); gap: 10px 16px; }
+.cert dt { font-style: italic; font-size: .95rem; }
+.cert dd { margin: 0; font-family: var(--f-mono); font-size: 1rem; border-bottom: 1px dotted var(--paper-line); min-width: 0; overflow-wrap: anywhere; }
+.cert dd.big { font-size: 1.3rem; font-weight: 600; }
+.stamp {
+  position: absolute; right: clamp(10px, 5vw, 46px); bottom: clamp(30px, 8vw, 70px);
+  font-family: var(--f-mono); font-weight: 600; font-size: clamp(.8rem, 2.4vw, 1.05rem); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--blood); border: 3px double var(--blood); padding: 8px 14px; transform: rotate(-14deg);
+  opacity: .82; mix-blend-mode: multiply; text-align: center; line-height: 1.3; pointer-events: none;
+}
+.cert-foot { font-size: .8rem; font-style: italic; border-top: 1px solid var(--paper-line); padding-top: 12px; padding-right: 9em; }
 
-/* settings */
-.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+/* ---------- form ---------- */
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px 28px; }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.field label { font-size: .82rem; font-weight: 500; color: var(--muted); }
-.field input[type="date"], .field input[type="number"] {
-  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
-  border-radius: 10px; padding: 9px 12px; width: 100%;
+.field > label, .field > .flabel { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); }
+input[type="date"], input[type="datetime-local"], input[type="number"], input[type="text"].line, select {
+  font-family: var(--f-mono); font-size: 1rem; color: var(--bone);
+  background: var(--ash); border: none; border-bottom: 1px solid var(--bone-dim); border-radius: 0;
+  padding: 9px 4px; width: 100%;
 }
-.field input[type="range"] { width: 100%; accent-color: var(--ember); }
-.range-val { font-family: var(--f-mono); font-size: .85rem; }
-.note { font-size: .8rem; color: var(--muted); }
+input:hover, select:hover { border-bottom-color: var(--blood-hi); }
+.seg { display: flex; }
+.seg label { flex: 1; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; text-align: center; font-family: var(--f-mono); font-size: .85rem; padding: 9px 6px; border: 1px solid var(--rust); }
+.seg input:checked + span { background: var(--bone); color: var(--void); border-color: var(--bone); }
+.seg input:focus-visible + span { outline: 2px solid var(--blood-hi); outline-offset: 2px; }
+.hint { font-size: .8rem; color: var(--bone-dim); font-style: italic; }
+.ills { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
+.ill { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rust); cursor: pointer; }
+.ill input { width: 18px; height: 18px; accent-color: var(--blood); margin: 0; }
+.ill .cost { font-family: var(--f-mono); font-size: .8rem; color: var(--blood-hi); }
+.ill:has(input:checked) { color: #fff; }
+.note-box { border-left: 2px solid var(--blood); padding: 4px 0 4px 14px; font-size: .88rem; color: var(--bone-dim); max-width: 70ch; }
 
-/* counts */
-.counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.count { background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
-.count .n { font-family: var(--f-display); font-weight: 800; font-size: 3rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.count .what { font-weight: 700; }
-.count .why { font-size: .85rem; color: var(--muted); }
-.count.alert .n { color: var(--ember); }
+/* ---------- ledger ---------- */
+.ledger-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; min-width: 520px; }
+th { font-family: var(--f-mono); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--bone-dim); text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--bone-dim); font-weight: 400; }
+td { padding: 11px 8px; border-bottom: 1px solid var(--rust); vertical-align: top; }
+td.yrs { font-family: var(--f-mono); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.yrs.neg { color: var(--blood-hi); }
+td.yrs.pos { color: var(--moss); }
+td.src { font-size: .8rem; color: var(--bone-dim); font-style: italic; }
+tr.total td { border-top: 1px solid var(--bone); border-bottom: none; font-weight: 600; font-size: 1.1rem; }
 
-/* weeks grid */
-.grid-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-canvas { display: block; width: 100%; }
-.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: .82rem; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+/* ---------- counts ---------- */
+.counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 34px 28px; }
+.count { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--rust); padding-top: 14px; }
+.count .n { font-family: var(--f-goth); font-weight: 900; font-size: 3.6rem; line-height: .9; font-variant-numeric: tabular-nums; }
+.count.alert .n { color: var(--blood-hi); }
+.count .what { font-weight: 600; }
+.count .why { font-size: .86rem; color: var(--bone-dim); font-style: italic; }
 
-/* pledge */
-.pledge { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-.tasks { display: flex; flex-direction: column; gap: 10px; }
-.task { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
-.task input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--good); }
-.task input[type="text"] { font: inherit; border: none; background: transparent; color: var(--ink); width: 100%; padding: 6px 0; }
-.task input[type="text"]::placeholder { color: var(--muted); }
-.task.done input[type="text"] { text-decoration: line-through; color: var(--muted); }
-.score { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-.score .n { font-family: var(--f-display); font-weight: 900; font-size: 4rem; line-height: 1; }
-.score .msg { font-weight: 500; }
+/* ---------- weeks ---------- */
+canvas#weeks { display: block; width: 100%; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); }
 
-/* quote */
-.quote { border-top: 1px solid var(--line); padding-top: 28px; display: flex; flex-direction: column; gap: 14px; }
-.quote blockquote { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: clamp(1.6rem, 4.4vw, 2.6rem); line-height: 1.12; max-width: 30ch; text-wrap: balance; }
-.quote cite { font-style: normal; color: var(--muted); font-size: .9rem; }
+/* ---------- task tracker ---------- */
+.tracker { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.addform { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px) auto; gap: 10px; align-items: end; }
+.addform .field { gap: 4px; }
+.tabs { display: flex; gap: 0; margin-top: 6px; }
+.tabs button { flex: 0 0 auto; border-color: var(--rust); }
+.tabs button + button { border-left: none; }
+.tasklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.task { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 12px; align-items: center; border-bottom: 1px solid var(--rust); padding: 12px 0; }
+.task input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--blood); margin: 0; }
+.task .t-title { font-size: 1.05rem; overflow-wrap: anywhere; }
+.task .t-due { display: block; font-family: var(--f-mono); font-size: .74rem; color: var(--bone-dim); margin-top: 2px; }
+.task.overdue .t-due { color: var(--blood-hi); font-weight: 600; }
+.task.overdue .t-title { color: #fff; }
+.task.soon .t-due { color: #D9A441; }
+.task.done .t-title { text-decoration: line-through; text-decoration-color: var(--blood); color: var(--bone-dim); }
+.task .del { border: none; padding: 6px 8px; color: var(--bone-dim); font-size: 1rem; letter-spacing: 0; }
+.task .del:hover { color: var(--blood-hi); }
+.empty { padding: 22px 0; color: var(--bone-dim); font-style: italic; border-bottom: 1px solid var(--rust); }
+.side { display: flex; flex-direction: column; gap: 22px; }
+.stat .n { font-family: var(--f-goth); font-weight: 900; font-size: 4.2rem; line-height: .85; }
+.stat .msg { font-style: italic; margin-top: 6px; }
+.limit { font-family: var(--f-mono); font-size: .78rem; color: var(--bone-dim); }
+.limit.hit { color: var(--blood-hi); }
+.lock { font-family: var(--f-mono); font-size: .72rem; color: var(--blood-hi); letter-spacing: .08em; }
 
-/* wasted-time pill */
+/* ---------- pricing ---------- */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.plan { border: 1px solid var(--rust); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+.plan.pro { border-color: var(--blood); box-shadow: 0 0 60px var(--blood-glow); }
+.plan .pname { font-family: var(--f-goth); font-size: 2rem; line-height: 1; }
+.plan .price { font-family: var(--f-mono); font-size: 2.2rem; font-weight: 600; line-height: 1; }
+.plan .price small { font-size: .9rem; font-weight: 400; color: var(--bone-dim); }
+.plan ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: .95rem; }
+.plan li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; }
+.plan li::before { content: "†"; color: var(--blood-hi); font-family: var(--f-goth); }
+.plan li.no { color: var(--bone-dim); text-decoration: line-through; }
+.plan li.no::before { content: "×"; color: var(--bone-dim); }
+.plan .status { font-family: var(--f-mono); font-size: .8rem; color: var(--bone-dim); }
+
+/* ---------- modal / alarm ---------- */
+.overlay { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
+.dialog { background: var(--ash); border: 1px solid var(--blood); max-width: 460px; width: 100%; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.dialog h3 { font-family: var(--f-goth); font-size: 2.2rem; line-height: 1; }
+.dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.alarm { background: #1a0403; border-color: var(--blood-hi); animation: throb 1s ease-in-out infinite; }
+.alarm h3 { color: var(--blood-hi); font-size: 3rem; }
+.alarm .what { font-size: 1.3rem; color: #fff; }
+@keyframes throb { 0%, 100% { box-shadow: 0 0 0 0 var(--blood-glow); } 50% { box-shadow: 0 0 80px 20px var(--blood-glow); } }
+
+/* ---------- epitaph ---------- */
+.epitaph { align-items: center; text-align: center; gap: 16px; }
+.epitaph blockquote { margin: 0; font-family: var(--f-goth); font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.08; max-width: 24ch; }
+.epitaph cite { font-style: italic; color: var(--bone-dim); }
+
+/* ---------- wasted ---------- */
 .wasted {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 9px 18px;
-  font-size: .85rem; box-shadow: 0 8px 30px rgba(0,0,0,.25); max-width: calc(100% - 32px);
-  text-align: center; z-index: 5;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--blood); color: #fff; font-family: var(--f-mono); font-size: .78rem; letter-spacing: .04em; text-align: center;
 }
-.wasted b { font-family: var(--f-mono); color: var(--ember); }
+.wasted b { font-weight: 600; }
 
-.past-life { color: var(--good); font-weight: 700; }
-
-@media (max-width: 720px) {
-  .hero { grid-template-columns: minmax(0, 1fr) 90px; gap: 16px; }
-  .candle { height: 220px; }
-  .wax { width: 44px; }
-  .plate { width: 80px; }
-  .pledge { grid-template-columns: minmax(0, 1fr); }
-  .bar-row { grid-template-columns: 84px minmax(0, 1fr) 56px; }
+@media (max-width: 760px) {
+  .cert dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .cert dt { margin-top: 8px; }
+  .cert-foot { padding-right: 0; padding-bottom: 70px; }
+  .stamp { bottom: 22px; }
+  .tracker { grid-template-columns: minmax(0, 1fr); }
+  .addform { grid-template-columns: minmax(0, 1fr); }
+  body { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .flame { animation: none; }
-  .wax { transition: none; }
+  .hero .label, .days.glitch, .alarm { animation: none; }
 }
 </style>
 
+<canvas id="grain" aria-hidden="true"></canvas>
+<div class="lamp" id="lamp" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
 <div class="wrap">
-  <header class="top">
-    <div class="brand">Đồng hồ <span>đời người</span></div>
-    <button id="toggleSettings" type="button" aria-expanded="false">Chỉnh thông tin của bạn</button>
-  </header>
+  <div class="head-block">
+    <div class="planbar" id="planbar"><span id="planText">Đang tải gói...</span><button id="planBtn" type="button">Xem gói</button></div>
+    <header class="top">
+      <div class="brand">Đồng hồ <span>đời người</span></div>
+      <div class="top-actions">
+        <button id="heartBtn" type="button" aria-pressed="false">Nghe nhịp tim</button>
+        <button id="jumpTasks" type="button">Sổ việc</button>
+        <button id="jumpForm" type="button">Khai hồ sơ</button>
+      </div>
+    </header>
+  </div>
 
-  <section id="settingsPanel" hidden aria-label="Thông tin của bạn">
-    <div class="settings">
-      <div class="field">
-        <label for="birth">Ngày sinh</label>
-        <input id="birth" type="date">
-      </div>
-      <div class="field">
-        <label for="life">Sống đến bao nhiêu tuổi: <span class="range-val" id="lifeVal">74</span></label>
-        <input id="life" type="range" min="40" max="110" step="1" value="74">
-        <span class="note">Tuổi thọ trung bình ở Việt Nam khoảng 74.</span>
-      </div>
-      <div class="field">
-        <label for="sleep">Giờ ngủ mỗi ngày</label>
-        <input id="sleep" type="number" min="0" max="16" step="0.5" value="8">
-      </div>
-      <div class="field">
-        <label for="work">Giờ học / làm mỗi ngày</label>
-        <input id="work" type="number" min="0" max="18" step="0.5" value="8">
-      </div>
-      <div class="field">
-        <label for="phone">Giờ lướt điện thoại mỗi ngày</label>
-        <input id="phone" type="number" min="0" max="18" step="0.5" value="4">
-      </div>
-      <div class="field">
-        <label for="parentAge">Bố mẹ bạn bao nhiêu tuổi</label>
-        <input id="parentAge" type="number" min="20" max="110" step="1" value="50">
-      </div>
-      <div class="field">
-        <label for="visits">Số lần gặp bố mẹ mỗi năm</label>
-        <input id="visits" type="number" min="0" max="365" step="1" value="6">
-      </div>
+  <section class="hero">
+    <p class="label">Thời gian còn lại của bạn</p>
+    <div class="days" id="bigDays">0</div>
+    <p class="days-unit">ngày. Rồi hết.</p>
+    <div class="clock" aria-label="Đếm ngược">
+      <div><b id="tY">0</b><span>năm</span></div>
+      <div><b id="tD">0</b><span>ngày</span></div>
+      <div><b id="tH">00</b><span>giờ</span></div>
+      <div><b id="tM">00</b><span>phút</span></div>
+      <div class="sec"><b id="tS">00</b><span>giây</span></div>
     </div>
-    <p class="note" id="exampleNote">Đang hiển thị số liệu ví dụ (sinh ngày 01/01/2000). Nhập ngày sinh của bạn để thấy con số thật. Mọi thứ chỉ lưu trên máy bạn.</p>
+    <p class="pulse-line">Tim bạn còn đập khoảng <b id="beats">0</b> lần nữa. Hôm nay chỉ còn <b id="todayLeft">0 giờ</b>.</p>
   </section>
 
-  <section class="hero" aria-live="off">
-    <div class="hero-text">
-      <p class="eyebrow" id="heroEyebrow">Nếu bạn sống đến 74 tuổi, bạn còn</p>
-      <div class="big" id="bigDays">0</div>
-      <div class="big-unit">ngày để sống</div>
-      <div class="tick">
-        <span><b id="tY">0</b><small>năm</small></span>
-        <span><b id="tD">0</b><small>ngày</small></span>
-        <span><b id="tH">00</b><small>giờ</small></span>
-        <span><b id="tM">00</b><small>phút</small></span>
-        <span><b id="tS">00</b><small>giây</small></span>
+  <section>
+    <p class="label">Văn bản số 01: dự báo</p>
+    <article class="cert" aria-label="Giấy báo tử dự kiến">
+      <div class="cert-inner">
+        <div class="cert-head">
+          <span class="gov">Sổ đăng ký những ngày còn lại</span>
+          <h3>Giấy Báo Tử</h3>
+          <span class="no">Số: <span id="certNo">000000</span>/DK</span>
+        </div>
+        <dl>
+          <dt>Người được dự báo</dt><dd>Bạn, người đang đọc dòng này</dd>
+          <dt>Ngày sinh</dt><dd id="cBirth">01/01/2000</dd>
+          <dt>Ngày mất dự kiến</dt><dd class="big" id="cDeath">...</dd>
+          <dt>Hưởng dương</dt><dd id="cAge">... tuổi</dd>
+          <dt>Nguyên nhân chính</dt><dd id="cCause">...</dd>
+          <dt>Đã sống được</dt><dd id="cLived">...</dd>
+        </dl>
+        <p class="cert-foot">Văn bản này không có giá trị pháp lý và có thể bị thay đổi bởi chính đương sự, bắt đầu từ hôm nay.</p>
       </div>
-      <p class="seconds-line">Tức là <b id="secLeft">0</b> nhịp đồng hồ. Vừa có một nhịp trôi đi trong lúc bạn đọc câu này.</p>
-    </div>
-    <div>
-      <div class="candle" aria-hidden="true">
-        <div class="flame-box"><div class="flame" id="flame"></div></div>
-        <div class="wick"></div>
-        <div class="wax" id="wax" style="height:150px"></div>
-        <div class="plate"></div>
+      <div class="stamp" id="stamp">Chưa<br>quá muộn</div>
+    </article>
+  </section>
+
+  <section id="tasksSec">
+    <p class="label">Văn bản số 02: sổ việc</p>
+    <h2>Việc phải xong, trước khi quá muộn</h2>
+    <p class="lede">Ghi việc và hạn chót. Đến hạn mà chưa xong, trang sẽ báo động. Trước hạn 10 phút, nó nhắc bạn một lần.</p>
+    <div class="tracker">
+      <div class="side" style="gap:14px">
+        <form class="addform" id="addForm" autocomplete="off">
+          <div class="field"><label for="newTitle">Việc cần làm</label><input class="line" id="newTitle" type="text" maxlength="140" placeholder="Ví dụ: gọi điện cho mẹ" required></div>
+          <div class="field"><label for="newDue">Hạn chót</label><input id="newDue" type="datetime-local"></div>
+          <button type="submit" class="btn-blood" id="addBtn">Ghi vào sổ</button>
+        </form>
+        <p class="limit" id="limitNote"></p>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tabOpen" aria-selected="true" aria-pressed="true">Chưa xong</button>
+          <button type="button" role="tab" id="tabDone" aria-selected="false" aria-pressed="false">Đã xong</button>
+        </div>
+        <ul class="tasklist" id="taskList"></ul>
       </div>
-      <p class="candle-label"><span class="num" id="burnPct">0%</span> ngọn nến đã cháy</p>
+      <div class="side">
+        <div class="stat">
+          <span class="label">Hôm nay đã xong</span>
+          <div class="n mono" id="doneToday">0</div>
+          <p class="msg" id="doneMsg">Chưa có gì. Ngày vẫn đang trôi.</p>
+        </div>
+        <div class="stat">
+          <span class="label">Đang quá hạn</span>
+          <div class="n mono red" id="overdueN">0</div>
+        </div>
+        <div class="stat">
+          <span class="label">Chuỗi ngày không bỏ cuộc</span>
+          <div class="n mono" id="streak">0</div>
+          <p class="hint">Số ngày liên tiếp làm xong ít nhất một việc.</p>
+        </div>
+        <div class="field">
+          <span class="flabel">Nhắc nhở</span>
+          <button type="button" id="notifBtn">Bật thông báo trên máy</button>
+          <span class="hint" id="notifHint">Báo động trong trang luôn hoạt động khi trang đang mở.</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="today">
-    <p class="today-head">Nếu hôm nay là ngày cuối cùng, bạn chỉ còn <b id="todayLeft">0 giờ 0 phút</b>. Bạn sẽ dùng nó vào việc gì?</p>
-    <div class="bars">
-      <div class="bar-row"><span>Hôm nay</span><div class="bar"><i id="barDay"></i></div><span class="num" id="pDay">0%</span></div>
-      <div class="bar-row"><span>Năm <span id="yearLbl">2026</span></span><div class="bar"><i id="barYear"></i></div><span class="num" id="pYear">0%</span></div>
-      <div class="bar-row"><span>Cuộc đời</span><div class="bar"><i id="barLife"></i></div><span class="num" id="pLife">0%</span></div>
+  <section id="formSec">
+    <p class="label">Văn bản số 03: tờ khai</p>
+    <h2>Khai thật. Cái chết không nghe lời nói dối.</h2>
+    <p class="lede" id="sampleNote">Đang dùng hồ sơ mẫu (nam, sinh 01/01/2000). Sửa từng ô bên dưới, mọi con số trên trang sẽ đổi theo ngay. Dữ liệu chỉ nằm trong trình duyệt của bạn.</p>
+    <div class="form">
+      <div class="field"><label for="birth">Ngày sinh</label><input id="birth" type="date"></div>
+      <div class="field">
+        <span class="flabel" id="sexLbl">Giới tính</span>
+        <div class="seg" role="radiogroup" aria-labelledby="sexLbl">
+          <label><input type="radio" name="sex" id="sexM" value="m"><span>Nam</span></label>
+          <label><input type="radio" name="sex" id="sexF" value="f"><span>Nữ</span></label>
+        </div>
+      </div>
+      <div class="field"><label for="height">Chiều cao (cm)</label><input id="height" type="number" min="100" max="230" step="1"></div>
+      <div class="field"><label for="weight">Cân nặng (kg)</label><input id="weight" type="number" min="25" max="300" step="0.5"><span class="hint" id="bmiHint"></span></div>
+      <div class="field"><label for="exercise">Tập thể dục (phút / ngày)</label><input id="exercise" type="number" min="0" max="300" step="5"><span class="hint">Đi bộ nhanh trở lên. Đi lại trong nhà không tính.</span></div>
+      <div class="field"><label for="sitting">Ngồi không (giờ / ngày)</label><input id="sitting" type="number" min="0" max="20" step="0.5"><span class="hint">Ngồi học, ngồi máy tính, nằm lướt điện thoại.</span></div>
+      <div class="field"><label for="sleep">Ngủ (giờ / đêm)</label><input id="sleep" type="number" min="2" max="14" step="0.5"></div>
+      <div class="field">
+        <label for="smoke">Thuốc lá</label>
+        <select id="smoke">
+          <option value="never">Chưa bao giờ hút</option>
+          <option value="quit">Đã bỏ</option>
+          <option value="yes">Đang hút</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="alcohol">Rượu bia (ly / tuần)</label>
+        <select id="alcohol">
+          <option value="0">Không hoặc dưới 10 ly</option>
+          <option value="1">10 đến 20 ly</option>
+          <option value="2">20 đến 35 ly</option>
+          <option value="3">Trên 35 ly</option>
+        </select>
+        <span class="hint">1 ly = 1 lon bia hoặc 1 chén rượu nhỏ.</span>
+      </div>
+      <div class="field"><label for="phone">Lướt điện thoại (giờ / ngày)</label><input id="phone" type="number" min="0" max="20" step="0.5"></div>
+      <div class="field"><label for="parentAge">Bố mẹ bạn bao nhiêu tuổi</label><input id="parentAge" type="number" min="20" max="110" step="1"></div>
+      <div class="field"><label for="visits">Số lần gặp bố mẹ mỗi năm</label><input id="visits" type="number" min="0" max="365" step="1"></div>
+    </div>
+    <div class="field">
+      <span class="flabel">Bệnh đang mắc (chọn tất cả những gì đúng)</span>
+      <div class="ills" id="ills"></div>
+    </div>
+    <p class="note-box">Đây là ước tính thống kê từ các nghiên cứu dịch tễ lớn, không phải chẩn đoán. Hai người cùng hồ sơ vẫn có thể sống chênh nhau vài chục năm. Nếu bạn có bệnh, con số đúng nhất là con số bác sĩ của bạn nói.</p>
+  </section>
+
+  <section>
+    <p class="label">Văn bản số 04: biên bản tính toán</p>
+    <h2>Từng năm được cộng, từng năm bị lấy đi</h2>
+    <p class="lede">Bắt đầu từ tuổi thọ trung bình của người Việt cùng giới tính, rồi cộng trừ theo thói quen và bệnh của bạn. Nhiều bệnh cùng lúc không cộng dồn hết, vì chúng thường chồng lên nhau: bệnh nặng nhất tính đủ, các bệnh sau giảm dần.</p>
+    <div class="ledger-wrap">
+      <table>
+        <thead><tr><th>Yếu tố</th><th>Của bạn</th><th style="text-align:right">Năm</th><th>Căn cứ</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
     </div>
   </section>
 
   <section>
-    <p class="eyebrow">Đổi ra những thứ đếm được</p>
+    <p class="label">Văn bản số 05: kiểm kê</p>
     <h2>Bạn còn bao nhiêu lần nữa?</h2>
-    <p class="lede">"Mấy chục năm" nghe thì nhiều. Đếm ra từng lần một thì không còn nhiều như bạn nghĩ.</p>
     <div class="counts" id="counts"></div>
   </section>
 
   <section>
-    <p class="eyebrow">Mỗi ô là một tuần</p>
-    <h2>Cả cuộc đời trên một trang giấy</h2>
-    <p class="lede">Mỗi hàng là một năm, mỗi ô là một tuần. Ô cam nhấp nháy là tuần này. Ô trống là tất cả những gì còn lại.</p>
-    <div class="grid-wrap">
-      <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
-      <div class="legend">
-        <span><i class="sw" style="background:var(--cell-past)"></i>Đã sống (<b class="num" id="wPast">0</b> tuần)</span>
-        <span><i class="sw" style="background:var(--ember)"></i>Tuần này</span>
-        <span><i class="sw" style="background:var(--cell-empty)"></i>Còn lại (<b class="num" id="wLeft">0</b> tuần)</span>
+    <p class="label">Văn bản số 06: sổ tuần</p>
+    <h2>Mỗi dấu gạch là một tuần đã chôn</h2>
+    <p class="lede">Mỗi hàng là một năm, mỗi ký hiệu là một tuần. Dấu × là tuần đã qua. Ô đỏ là tuần này. Dấu chấm là những tuần bạn vẫn còn, nếu dự báo đúng.</p>
+    <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
+    <div class="legend"><span>× đã qua: <b id="wPast">0</b></span><span class="red">■ tuần này</span><span>· còn lại: <b id="wLeft">0</b></span></div>
+  </section>
+
+  <section id="planSec">
+    <p class="label">Văn bản số 07: gia hạn</p>
+    <h2>Gia hạn kỷ luật, không gia hạn được tuổi thọ</h2>
+    <p class="lede">Mọi người được dùng đầy đủ 3 ngày miễn phí. Sau đó chọn ở lại gói miễn phí, hoặc trả 24.000đ mỗi tháng, rẻ hơn một ly trà sữa.</p>
+    <div class="plans">
+      <div class="plan">
+        <span class="pname">Miễn phí</span>
+        <span class="price">0đ <small>/ mãi mãi</small></span>
+        <ul>
+          <li>Đồng hồ đếm ngược và giấy báo tử</li>
+          <li>Tính tuổi thọ theo thói quen và bệnh</li>
+          <li>Sổ việc tối đa 3 việc chưa xong</li>
+          <li class="no">Báo động khi đến hạn chót</li>
+          <li class="no">Nhắc trước hạn 10 phút</li>
+          <li class="no">Không giới hạn số việc</li>
+        </ul>
+      </div>
+      <div class="plan pro">
+        <span class="pname">Người Sống</span>
+        <span class="price">24.000đ <small>/ tháng</small></span>
+        <ul>
+          <li>Tất cả của gói miễn phí</li>
+          <li>Không giới hạn số việc</li>
+          <li>Báo động khi đến hạn chót</li>
+          <li>Nhắc trước hạn 10 phút</li>
+          <li>Thông báo trên máy khi được cho phép</li>
+        </ul>
+        <span class="status" id="planStatus"></span>
+        <button type="button" class="btn-blood" id="subBtn">Đăng ký 24.000đ / tháng</button>
       </div>
     </div>
   </section>
 
-  <section>
-    <p class="eyebrow">Sống như ngày cuối cùng</p>
-    <h2>Ba việc phải xong trước khi ngủ</h2>
-    <p class="lede">Không cần kế hoạch 5 năm. Chỉ cần ba việc cho hôm nay mà nếu mai không còn, bạn sẽ mừng vì đã làm. Danh sách tự làm mới mỗi ngày.</p>
-    <div class="pledge">
-      <div class="tasks" id="tasks"></div>
-      <div class="score">
-        <span class="eyebrow">Hôm nay</span>
-        <div class="n num" id="doneCount">0/3</div>
-        <p class="msg" id="doneMsg">Viết ra việc đầu tiên. Ngay bây giờ.</p>
-        <p class="note">Chuỗi ngày hoàn thành đủ 3 việc: <b class="num" id="streak">0</b> ngày</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="quote">
+  <section class="epitaph">
+    <p class="label">Văn bia</p>
     <blockquote id="quoteText"></blockquote>
     <cite id="quoteBy"></cite>
-    <div><button id="nextQuote" type="button">Câu khác</button></div>
+    <button id="nextQuote" type="button">Đọc bia khác</button>
   </section>
 </div>
 
-<div class="wasted" id="wasted">Bạn đã ở trang này <b id="onPage">0 giây</b>. Đủ rồi, đi làm việc số 1 thôi.</div>
+<div class="overlay" id="payModal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <h3 id="payTitle">Gói Người Sống</h3>
+    <p>24.000đ mỗi tháng, tự gia hạn, hủy bất cứ lúc nào.</p>
+    <p class="note-box">Cổng thanh toán chưa được kết nối. Bản này chưa thu tiền và không hỏi thông tin thẻ của bạn. Khi kết nối MoMo, VNPay hoặc PayOS, nút bên dưới sẽ chuyển bạn sang trang thanh toán của họ.</p>
+    <div class="row">
+      <button type="button" class="btn-blood" id="payClose">Đã hiểu</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="alarm" hidden>
+  <div class="dialog alarm" role="alertdialog" aria-modal="true" aria-labelledby="alarmTitle">
+    <span class="label" id="alarmKind">Đã đến hạn</span>
+    <h3 id="alarmTitle">Hết giờ.</h3>
+    <p class="what" id="alarmWhat"></p>
+    <p id="alarmSub" class="hint"></p>
+    <div class="row">
+      <button type="button" class="btn-blood" id="alarmDone">Đã xong</button>
+      <button type="button" id="alarmSnooze">Cho tôi 10 phút</button>
+      <button type="button" id="alarmClose">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="wasted">Bạn đã tiêu <b id="onPage">0 giây</b> trên trang này. Chúng sẽ không quay lại.</div>
 
 <script>
 (function () {
   "use strict";
-  var DAY = 864e5;
+  var DAY = 864e5, YEAR = 365.2425 * DAY, MIN = 6e4;
   var $ = function (id) { return document.getElementById(id); };
-  var fmt = function (n) { return Math.round(n).toLocaleString("vi-VN"); };
+  var fmt = function (n, d) { return Number(n).toLocaleString("vi-VN", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
   var pad = function (n) { return String(n).padStart(2, "0"); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function load(k, f) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
-  function load(key, fallback) {
-    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+  // ================= THUẬT TOÁN TUỔI THỌ =================
+  var BASE = { m: 71.1, f: 76.3 }; // Tổng cục Thống kê VN, khoảng 2023
+  var ILLS = [
+    { id: "cvd", name: "Bệnh tim mạch hoặc từng đột quỵ", y: 7, src: "Emerging Risk Factors Collab., JAMA 2015" },
+    { id: "dep", name: "Trầm cảm, rối loạn lo âu kéo dài", y: 7, src: "Chesney et al., World Psychiatry 2014" },
+    { id: "dm", name: "Tiểu đường type 2", y: 6, src: "Emerging Risk Factors Collab., JAMA 2015" },
+    { id: "cancer", name: "Ung thư đang điều trị", y: 6, src: "Rất khác nhau theo loại; lấy mức trung bình thận trọng" },
+    { id: "ckd", name: "Bệnh thận mạn", y: 5, src: "Turin et al., JASN 2012" },
+    { id: "htn", name: "Tăng huyết áp", y: 5, src: "Franco et al., Hypertension 2005 (Framingham)" },
+    { id: "copd", name: "Bệnh phổi tắc nghẽn mạn tính, hen nặng", y: 4, src: "Shavelle et al., Int J COPD 2009" },
+    { id: "liver", name: "Viêm gan B/C mạn, xơ gan", y: 4, src: "Ước tính từ các nghiên cứu theo dõi viêm gan mạn" },
+    { id: "lipid", name: "Mỡ máu cao", y: 1.5, src: "Ước tính từ nguy cơ tim mạch tăng thêm" }
+  ];
+  var DIMINISH = [1, .75, .6, .5, .4, .35, .3, .3, .3];
+  function lerp(pts, x) {
+    if (x <= pts[0][0]) return pts[0][1];
+    for (var i = 1; i < pts.length; i++) if (x <= pts[i][0]) { var a = pts[i - 1], b = pts[i]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); }
+    return pts[pts.length - 1][1];
   }
-  function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  var EX_CURVE = [[0, 0], [75, 1.8], [150, 3.4], [300, 4.2], [450, 4.5]]; // Moore et al. 2012
+  var EX_REF = lerp(EX_CURVE, 60);
+  function sitPenalty(h) { return Math.min(3, Math.max(0, h - 3) * 0.33); } // Katzmarzyk & Lee 2012
+  var SIT_REF = sitPenalty(7);
 
-  var DEFAULTS = { birth: "", life: 74, sleep: 8, work: 8, phone: 4, parentAge: 50, visits: 6 };
-  var cfg = Object.assign({}, DEFAULTS, load("dhdn-cfg", {}));
+  function compute(c) {
+    var rows = [], base = BASE[c.sex] || BASE.m;
+    rows.push({ k: "Tuổi thọ trung bình người Việt (" + (c.sex === "f" ? "nữ" : "nam") + ")", v: "", y: base, src: "Tổng cục Thống kê Việt Nam", base: true });
+    rows.push({ k: "Tập thể dục", v: (Number(c.exercise) || 0) + " phút/ngày", y: lerp(EX_CURVE, (Number(c.exercise) || 0) * 7) - EX_REF, src: "Moore et al., PLoS Medicine 2012 (654.827 người)" });
+    var sit = Number(c.sitting) || 0;
+    rows.push({ k: "Ngồi không", v: sit + " giờ/ngày", y: SIT_REF - sitPenalty(sit), src: "Katzmarzyk & Lee, BMJ Open 2012" });
+    var bmi = bmiOf(c);
+    if (bmi) {
+      var by = bmi < 18.5 ? -1 : bmi < 25 ? 0 : bmi < 30 ? -0.5 : bmi < 35 ? -3 : bmi < 40 ? -5 : -9;
+      rows.push({ k: "Chỉ số BMI", v: fmt(bmi, 1), y: by, src: "Prospective Studies Collab., Lancet 2009" });
+    }
+    var sl = Number(c.sleep) || 0;
+    rows.push({ k: "Giấc ngủ", v: sl + " giờ/đêm", y: sl < 6 ? -1 : sl > 9 ? -0.5 : 0, src: "Cappuccio et al., Sleep 2010" });
+    rows.push({ k: "Thuốc lá", v: { never: "không hút", quit: "đã bỏ", yes: "đang hút" }[c.smoke], y: { never: 0, quit: -2, yes: -10 }[c.smoke] || 0, src: "Jha et al., NEJM 2013" });
+    var ai = Number(c.alcohol) || 0;
+    rows.push({ k: "Rượu bia", v: ["dưới 10 ly/tuần", "10–20 ly/tuần", "20–35 ly/tuần", "trên 35 ly/tuần"][ai], y: [0, -0.5, -1.5, -4.5][ai], src: "Wood et al., Lancet 2018" });
+    ILLS.filter(function (i) { return c.ills.indexOf(i.id) >= 0; }).sort(function (a, b) { return b.y - a.y; }).forEach(function (ill, i) {
+      var w = DIMINISH[i] || .3;
+      rows.push({ k: ill.name, v: w < 1 ? "tính " + Math.round(w * 100) + "% vì trùng lặp" : "đang mắc", y: -ill.y * w, src: ill.src });
+    });
+    var total = rows.reduce(function (s, r) { return s + r.y; }, 0);
+    var ageNow = (Date.now() - birthOf(c)) / YEAR, floored = false;
+    if (total < ageNow + 0.5) { total = ageNow + 0.5; floored = true; }
+    total = Math.min(total, 105);
+    var worst = rows.filter(function (r) { return !r.base && r.y < 0; }).sort(function (a, b) { return a.y - b.y; })[0];
+    return { rows: rows, total: total, floored: floored, ageNow: ageNow, cause: worst && worst.y <= -0.9 ? causeText(worst) : "Tuổi già. Nếu bạn may mắn." };
+  }
+  function causeText(r) {
+    var map = { "Thuốc lá": "Hậu quả của thuốc lá", "Rượu bia": "Hậu quả của rượu bia", "Ngồi không": "Ngồi một chỗ quá lâu, quá nhiều năm", "Tập thể dục": "Cơ thể không được vận động", "Chỉ số BMI": "Biến chứng của béo phì", "Giấc ngủ": "Thiếu ngủ kéo dài" };
+    return map[r.k] || "Biến chứng của " + r.k.toLowerCase();
+  }
+  function bmiOf(c) { var h = Number(c.height) / 100, w = Number(c.weight); return h > 0 && w > 0 ? w / (h * h) : 0; }
+  function birthOf(c) { var p = (c.birth || "2000-01-01").split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
 
-  // ---------- settings ----------
-  var fields = ["birth", "life", "sleep", "work", "phone", "parentAge", "visits"];
-  fields.forEach(function (f) {
-    var el = $(f);
-    if (cfg[f] !== "" && cfg[f] != null) el.value = cfg[f];
-    el.addEventListener("input", function () {
-      cfg[f] = f === "birth" ? el.value : Number(el.value);
-      save("dhdn-cfg", cfg);
-      renderAll();
+  // ================= HỒ SƠ =================
+  var DEFAULTS = { birth: "", sex: "m", height: 168, weight: 62, exercise: 10, sitting: 9, sleep: 6.5, smoke: "never", alcohol: "1", phone: 5, parentAge: 50, visits: 6, ills: [] };
+  var cfg = Object.assign({}, DEFAULTS, load("dhdn-cfg2", {}));
+  var result, deathAt;
+  ["birth", "height", "weight", "exercise", "sitting", "sleep", "smoke", "alcohol", "phone", "parentAge", "visits"].forEach(function (f) {
+    var el = $(f); el.value = cfg[f];
+    el.addEventListener("input", function () { cfg[f] = el.value; commit(); });
+  });
+  $(cfg.sex === "f" ? "sexF" : "sexM").checked = true;
+  ["sexM", "sexF"].forEach(function (id) { $(id).addEventListener("change", function () { cfg.sex = $(id).value; commit(); }); });
+  $("ills").innerHTML = ILLS.map(function (i) {
+    return '<label class="ill"><input type="checkbox" id="ill-' + i.id + '"' + (cfg.ills.indexOf(i.id) >= 0 ? " checked" : "") +
+      '><span>' + i.name + '</span><span class="cost">−' + fmt(i.y, i.y % 1 ? 1 : 0) + ' năm</span></label>';
+  }).join("");
+  ILLS.forEach(function (i) {
+    $("ill-" + i.id).addEventListener("change", function (e) {
+      cfg.ills = cfg.ills.filter(function (x) { return x !== i.id; });
+      if (e.target.checked) cfg.ills.push(i.id);
+      commit();
     });
   });
-  var panel = $("settingsPanel"), toggleBtn = $("toggleSettings");
-  toggleBtn.addEventListener("click", function () {
-    panel.hidden = !panel.hidden;
-    toggleBtn.setAttribute("aria-expanded", String(!panel.hidden));
-    toggleBtn.textContent = panel.hidden ? "Chỉnh thông tin của bạn" : "Đóng";
-  });
-  if (!cfg.birth) { panel.hidden = false; toggleBtn.setAttribute("aria-expanded", "true"); toggleBtn.textContent = "Đóng"; }
+  function jump(id, focus) { $(id).scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); if (focus) $(focus).focus({ preventScroll: true }); }
+  $("jumpForm").addEventListener("click", function () { jump("formSec", "birth"); });
+  $("jumpTasks").addEventListener("click", function () { jump("tasksSec", "newTitle"); });
+  function commit() { save("dhdn-cfg2", cfg); recompute(); }
 
-  function birthDate() {
-    var s = cfg.birth || "2000-01-01";
-    var p = s.split("-").map(Number);
-    return new Date(p[0], p[1] - 1, p[2]);
+  function recompute() {
+    result = compute(cfg);
+    var b = birthOf(cfg);
+    deathAt = new Date(b.getTime() + result.total * YEAR);
+    $("sampleNote").hidden = !!cfg.birth;
+    var bmi = bmiOf(cfg);
+    $("bmiHint").textContent = bmi ? "BMI " + fmt(bmi, 1) + (bmi < 18.5 ? ", thiếu cân" : bmi < 25 ? ", bình thường" : bmi < 30 ? ", thừa cân" : ", béo phì") : "";
+    renderCert(b); renderLedger(); renderCounts(); drawWeeks(); tick();
   }
-  function deathDate() {
-    var b = birthDate(), d = new Date(b);
-    d.setFullYear(b.getFullYear() + Number(cfg.life || 74));
-    return d;
+  var WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+  function dstr(d) { return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+  function renderCert(b) {
+    $("cBirth").textContent = dstr(b);
+    $("cDeath").textContent = WEEKDAYS[deathAt.getDay()] + ", " + dstr(deathAt);
+    $("cAge").textContent = fmt(result.total, 1) + " tuổi";
+    $("cCause").textContent = result.cause;
+    var lived = Math.max(0, result.ageNow / result.total);
+    $("cLived").textContent = fmt(lived * 100, 1) + "% quãng đời";
+    $("certNo").textContent = String(Math.abs(Math.floor((b.getTime() / DAY) * 7919 + result.total * 1000) % 1000000)).padStart(6, "0");
+    $("stamp").innerHTML = result.floored ? "Đang sống<br>trên thời gian vay" : lived > .75 ? "Thời gian<br>sắp cạn" : "Chưa<br>quá muộn";
+  }
+  function renderLedger() {
+    $("ledger").innerHTML = result.rows.map(function (r) {
+      var cls = r.base ? "" : r.y < -0.05 ? "neg" : r.y > 0.05 ? "pos" : "";
+      var y = r.base ? fmt(r.y, 1) : (r.y > 0.05 ? "+" : r.y < -0.05 ? "−" : "±") + fmt(Math.abs(r.y), 1);
+      return "<tr><td>" + r.k + "</td><td class=\"mono\">" + (r.v || "") + "</td><td class=\"yrs " + cls + "\">" + y + "</td><td class=\"src\">" + r.src + "</td></tr>";
+    }).join("") + "<tr class=\"total\"><td colspan=\"2\">Tuổi thọ dự báo" + (result.floored ? " (bạn đã sống vượt con số tính được)" : "") + "</td><td class=\"yrs\">" + fmt(result.total, 1) + "</td><td></td></tr>";
   }
 
-  // ---------- live ticker ----------
+  // ================= ĐỒNG HỒ =================
+  var lastSec = -1, lastDay = 0;
   function tick() {
-    var now = new Date(), b = birthDate(), d = deathDate();
-    var left = d - now, total = d - b;
-    $("exampleNote").hidden = !!cfg.birth;
-    $("heroEyebrow").textContent = "Nếu bạn sống đến " + cfg.life + " tuổi, bạn còn";
-
-    if (left <= 0) {
-      $("bigDays").textContent = "∞";
-      $("tY").textContent = $("tD").textContent = "0";
-      $("tH").textContent = $("tM").textContent = $("tS").textContent = "00";
-      $("secLeft").textContent = "vô số";
-      $("burnPct").textContent = "100%";
-      $("wax").style.height = "6px";
-    } else {
-      var y = 0, cursor = new Date(now);
-      while (true) {
-        var nx = new Date(cursor); nx.setFullYear(nx.getFullYear() + 1);
-        if (nx <= d) { cursor = nx; y++; } else break;
-      }
-      var rest = d - cursor;
-      $("bigDays").textContent = fmt(Math.floor(left / DAY));
-      $("tY").textContent = y;
-      $("tD").textContent = Math.floor(rest / DAY);
-      $("tH").textContent = pad(Math.floor(rest % DAY / 36e5));
-      $("tM").textContent = pad(Math.floor(rest % 36e5 / 6e4));
-      $("tS").textContent = pad(Math.floor(rest % 6e4 / 1e3));
-      $("secLeft").textContent = fmt(Math.floor(left / 1e3));
-      var lifePct = Math.min(1, Math.max(0, (now - b) / total));
-      $("burnPct").textContent = (lifePct * 100).toFixed(1).replace(".", ",") + "%";
-      var maxH = window.innerWidth <= 720 ? 140 : 210;
-      $("wax").style.height = Math.max(6, (1 - lifePct) * maxH) + "px";
-    }
-
-    // today / year / life bars
+    if (!deathAt) return;
+    var now = new Date(), left = Math.max(0, deathAt - now);
+    var y = 0, cur = new Date(now);
+    while (true) { var nx = new Date(cur); nx.setFullYear(nx.getFullYear() + 1); if (nx <= deathAt) { cur = nx; y++; } else break; }
+    var rest = Math.max(0, deathAt - cur);
+    $("bigDays").textContent = fmt(Math.floor(left / DAY));
+    $("tY").textContent = y;
+    $("tD").textContent = Math.floor(rest / DAY);
+    $("tH").textContent = pad(Math.floor(rest % DAY / 36e5));
+    $("tM").textContent = pad(Math.floor(rest % 36e5 / MIN));
+    $("tS").textContent = pad(Math.floor(rest % MIN / 1e3));
+    $("beats").textContent = fmt(left / MIN * 72);
     var sod = new Date(now); sod.setHours(0, 0, 0, 0);
-    var dayPct = (now - sod) / DAY;
-    var endDay = new Date(sod.getTime() + DAY) - now;
-    $("todayLeft").textContent = Math.floor(endDay / 36e5) + " giờ " + Math.floor(endDay % 36e5 / 6e4) + " phút";
-    var soy = new Date(now.getFullYear(), 0, 1), eoy = new Date(now.getFullYear() + 1, 0, 1);
-    var yearPct = (now - soy) / (eoy - soy);
-    var lp = Math.min(1, Math.max(0, (now - b) / total));
-    $("yearLbl").textContent = now.getFullYear();
-    setBar("barDay", "pDay", dayPct);
-    setBar("barYear", "pYear", yearPct);
-    setBar("barLife", "pLife", lp);
-
+    var endDay = sod.getTime() + DAY - now;
+    $("todayLeft").textContent = Math.floor(endDay / 36e5) + " giờ " + Math.floor(endDay % 36e5 / MIN) + " phút";
     if (sod.getTime() !== lastDay) { lastDay = sod.getTime(); renderTasks(); }
-  }
-  var lastDay = 0;
-  function setBar(barId, lblId, p) {
-    $(barId).style.width = (p * 100).toFixed(2) + "%";
-    $(lblId).textContent = (p * 100).toFixed(1).replace(".", ",") + "%";
+    var s = now.getSeconds();
+    if (s !== lastSec) {
+      lastSec = s;
+      if (!reduce && Math.random() < 0.12) { var el = $("bigDays"); el.classList.remove("glitch"); void el.offsetWidth; el.classList.add("glitch"); }
+      if (heartOn) beat();
+      if (s % 15 === 0) renderTasks(); // cập nhật nhãn "còn X phút"
+      checkReminders(now.getTime());
+      renderPlan();
+    }
   }
 
-  // ---------- counts ----------
+  // ================= KIỂM KÊ =================
   function renderCounts() {
-    var now = new Date(), d = deathDate();
-    var yearsLeft = Math.max(0, (d - now) / (365.2425 * DAY));
-    var daysLeft = Math.max(0, (d - now) / DAY);
-    var weeksLeft = daysLeft / 7;
-    var sleep = Number(cfg.sleep) || 0, work = Number(cfg.work) || 0, phone = Number(cfg.phone) || 0;
-    var freeH = Math.max(0, 24 - sleep - work);
-    var parentYears = Math.max(0, Number(cfg.life || 74) - Number(cfg.parentAge || 0));
-    parentYears = Math.min(parentYears, yearsLeft);
-    var parentVisits = parentYears * (Number(cfg.visits) || 0);
-
+    var yearsLeft = Math.max(0, (deathAt - Date.now()) / YEAR), daysLeft = yearsLeft * 365.2425;
+    var phone = Number(cfg.phone) || 0, sleep = Number(cfg.sleep) || 0, sit = Number(cfg.sitting) || 0;
+    var parentLife = BASE.f - 1.5;
+    var parentYears = Math.min(yearsLeft, Math.max(0, parentLife - (Number(cfg.parentAge) || 0)));
     var items = [
-      { n: Math.floor(yearsLeft), what: "cái Tết", why: "Mỗi năm chỉ có một. Bạn đã đón bao nhiêu cái Tết mà chẳng nhớ gì?" },
-      { n: parentVisits, what: "lần gặp bố mẹ", why: "Nếu bố mẹ sống đến " + cfg.life + " và bạn về " + (cfg.visits || 0) + " lần mỗi năm.", alert: true },
-      { n: Math.floor(weeksLeft), what: "ngày cuối tuần", why: "Mỗi cái thứ Bảy nằm ườn trên giường là một ô trong số này." },
-      { n: yearsLeft * 12.37, what: "đêm trăng rằm", why: "Lần cuối bạn ngẩng lên nhìn trăng là khi nào?" },
-      { n: yearsLeft * 12, what: "cuốn sách", why: "Nếu từ hôm nay bạn đọc mỗi tháng một cuốn." },
-      { n: daysLeft * freeH, what: "giờ thật sự tự do", why: "Sau khi trừ " + sleep + " giờ ngủ và " + work + " giờ học/làm mỗi ngày." },
-      { n: daysLeft * phone / 365.2425 / 24, what: "năm nhìn màn hình", why: "Nếu cứ lướt " + phone + " giờ mỗi ngày như bây giờ. Tính liền 24/24.", alert: true },
-      { n: phone > 0 && freeH > 0 ? Math.min(100, phone / freeH * 100) : 0, what: "% giờ rảnh cho điện thoại", why: "Phần thời gian tự do bạn đang đưa cho thuật toán.", alert: true, pct: true }
+      { n: Math.floor(yearsLeft), what: "cái Tết", why: "Năm ngoái bạn đã dùng cái Tết của mình vào việc gì?" },
+      { n: parentYears * (Number(cfg.visits) || 0), what: "lần gặp bố mẹ", why: "Nếu bố mẹ sống đến khoảng " + Math.round(parentLife) + " tuổi và bạn về " + (cfg.visits || 0) + " lần mỗi năm.", alert: true },
+      { n: Math.floor(daysLeft / 7), what: "ngày thứ Bảy", why: "Mỗi thứ Bảy nằm ườn trên giường là một số bị gạch khỏi đây." },
+      { n: yearsLeft * 12.37, what: "đêm trăng rằm", why: "Lần cuối bạn ngẩng đầu nhìn trăng là khi nào?" },
+      { n: daysLeft * phone / 365.2425 / 24, what: "năm nhìn màn hình", why: "Tính liền 24/24, nếu cứ lướt " + phone + " giờ mỗi ngày.", alert: true, d: 1 },
+      { n: daysLeft * sit / 365.2425 / 24, what: "năm ngồi một chỗ", why: "Phần đời còn lại bạn sẽ dành cho cái ghế.", alert: true, d: 1 },
+      { n: daysLeft * sleep / 365.2425 / 24, what: "năm ngủ", why: "Cái này thì cần. Nhưng nó cũng là thời gian.", d: 1 },
+      { n: yearsLeft * 12, what: "cuốn sách", why: "Nếu từ hôm nay bạn đọc mỗi tháng một cuốn." }
     ];
     $("counts").innerHTML = items.map(function (it) {
-      return '<div class="count' + (it.alert ? " alert" : "") + '"><span class="n">' +
-        (it.pct ? Math.round(it.n) : fmt(it.n)) + '</span><span class="what">' + it.what +
-        '</span><span class="why">' + it.why + "</span></div>";
+      return '<div class="count' + (it.alert ? " alert" : "") + '"><span class="n">' + fmt(it.n, it.d) + '</span><span class="what">' + it.what + '</span><span class="why">' + it.why + "</span></div>";
     }).join("");
   }
 
-  // ---------- weeks grid ----------
-  var canvas = $("weeks"), ctx = canvas.getContext("2d"), pulse = 0;
+  // ================= SỔ TUẦN =================
+  var canvas = $("weeks"), ctx = canvas.getContext("2d"), phase = 0;
   function drawWeeks() {
+    if (!result) return;
     var cs = getComputedStyle(document.documentElement);
-    var cEmpty = cs.getPropertyValue("--cell-empty").trim();
-    var cPast = cs.getPropertyValue("--cell-past").trim();
-    var cEmber = cs.getPropertyValue("--ember").trim();
-    var cMuted = cs.getPropertyValue("--muted").trim();
-    var years = Number(cfg.life || 74), cols = 52;
-    var labelW = 26;
-    var w = canvas.clientWidth;
-    var cell = Math.min(12, Math.max(3, (w - labelW) / cols));
-    var gap = cell > 9 ? 2 : 1;
-    var h = Math.ceil(years * cell);
-    var dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    canvas.style.height = h + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-
-    var b = birthDate(), now = new Date();
-    var livedWeeks = Math.floor((now - b) / (7 * DAY));
-    var totalWeeks = years * cols;
-    ctx.font = "500 9px " + getComputedStyle(document.body).fontFamily;
-    ctx.fillStyle = cMuted; ctx.textBaseline = "middle";
+    var bone = cs.getPropertyValue("--bone-dim").trim(), blood = cs.getPropertyValue("--blood-hi").trim(), faint = cs.getPropertyValue("--rust").trim();
+    var years = Math.ceil(result.total), cols = 52, labelW = 24;
+    var w = canvas.clientWidth || 600, cell = Math.min(13, Math.max(4, (w - labelW) / cols));
+    var h = Math.ceil(years * cell), dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    var lived = Math.floor((Date.now() - birthOf(cfg)) / (7 * DAY)), total = Math.floor(result.total * 52.1775);
+    ctx.font = "9px 'IBM Plex Mono', monospace"; ctx.textBaseline = "middle"; ctx.lineWidth = Math.max(1, cell / 9);
     for (var y = 0; y < years; y++) {
-      if (y % 10 === 0) { ctx.fillStyle = cMuted; ctx.fillText(String(y), 0, y * cell + cell / 2); }
+      if (y % 10 === 0) { ctx.fillStyle = bone; ctx.fillText(String(y), 0, y * cell + cell / 2); }
       for (var x = 0; x < cols; x++) {
-        var i = y * cols + x;
-        if (i < livedWeeks) ctx.fillStyle = cPast;
-        else if (i === livedWeeks) { ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(pulse)); ctx.fillStyle = cEmber; }
-        else ctx.fillStyle = cEmpty;
-        ctx.fillRect(labelW + x * cell, y * cell, cell - gap, cell - gap);
+        var i = y * cols + x; if (i >= total) break;
+        var cx = labelW + x * cell + cell / 2, cy = y * cell + cell / 2, r = cell * 0.3;
+        if (i < lived) {
+          ctx.strokeStyle = bone; ctx.globalAlpha = .75; ctx.beginPath();
+          ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r); ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r); ctx.stroke();
+        } else if (i === lived) {
+          ctx.globalAlpha = .5 + .5 * Math.abs(Math.sin(phase)); ctx.fillStyle = blood; ctx.fillRect(cx - cell * .42, cy - cell * .42, cell * .84, cell * .84);
+        } else {
+          ctx.globalAlpha = 1; ctx.fillStyle = faint; ctx.beginPath(); ctx.arc(cx, cy, Math.max(.9, cell * .13), 0, 7); ctx.fill();
+        }
         ctx.globalAlpha = 1;
       }
     }
-    $("wPast").textContent = fmt(Math.min(livedWeeks, totalWeeks));
-    $("wLeft").textContent = fmt(Math.max(0, totalWeeks - livedWeeks - 1));
+    $("wPast").textContent = fmt(Math.min(lived, total));
+    $("wLeft").textContent = fmt(Math.max(0, total - lived - 1));
   }
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (!reduce) setInterval(function () { pulse += 0.35; drawWeeks(); }, 120);
-  window.addEventListener("resize", function () { drawWeeks(); tick(); });
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawWeeks);
-  new MutationObserver(drawWeeks).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (!reduce) setInterval(function () { phase += .3; drawWeeks(); }, 140);
+  window.addEventListener("resize", function () { drawWeeks(); sizeGrain(); });
 
-  // ---------- daily pledge ----------
-  function todayKey(dt) {
-    dt = dt || new Date();
-    return dt.getFullYear() + "-" + pad(dt.getMonth() + 1) + "-" + pad(dt.getDate());
+  // ================= GÓI THUÊ BAO =================
+  // Lưu ý: bản này chạy hoàn toàn trên trình duyệt; khi có máy chủ, trạng thái gói phải lấy từ máy chủ.
+  var TRIAL_MS = 3 * DAY, FREE_LIMIT = 3;
+  var plan = load("dhdn-plan", null);
+  if (!plan || !plan.trialStart) { plan = { trialStart: Date.now(), paidUntil: 0 }; save("dhdn-plan", plan); }
+  function planState() {
+    var now = Date.now();
+    if (plan.paidUntil > now) return { kind: "paid", left: plan.paidUntil - now };
+    var tl = plan.trialStart + TRIAL_MS - now;
+    return tl > 0 ? { kind: "trial", left: tl } : { kind: "free", left: 0 };
   }
-  var pledges = load("dhdn-pledges", {});
-  var PLACEHOLDERS = [
-    "Ví dụ: gọi điện cho mẹ, hỏi hôm nay mẹ ăn gì",
-    "Ví dụ: làm xong 30 phút việc mình đang trốn",
-    "Ví dụ: đi bộ 20 phút, không mang điện thoại"
-  ];
+  function isPro() { return planState().kind !== "free"; }
+  function dur(ms) { var d = Math.floor(ms / DAY), h = Math.floor(ms % DAY / 36e5), m = Math.floor(ms % 36e5 / MIN); return d > 0 ? d + " ngày " + h + " giờ" : h + " giờ " + m + " phút"; }
+  var lastPlanKind = "";
+  function renderPlan() {
+    if (!plan) return;
+    var st = planState();
+    var bar = $("planbar");
+    bar.classList.toggle("expired", st.kind === "free");
+    if (st.kind === "trial") {
+      $("planText").innerHTML = "Dùng thử miễn phí: còn <b>" + dur(st.left) + "</b>";
+      $("planBtn").textContent = "Đăng ký 24.000đ/tháng";
+      $("planStatus").textContent = "Bạn đang dùng thử. Còn " + dur(st.left) + ".";
+    } else if (st.kind === "paid") {
+      $("planText").innerHTML = "Gói Người Sống: còn <b>" + dur(st.left) + "</b>";
+      $("planBtn").textContent = "Xem gói";
+      $("planStatus").textContent = "Đang hoạt động.";
+    } else {
+      $("planText").innerHTML = "<b>Hết 3 ngày dùng thử.</b> Báo động hạn chót đã tắt, sổ việc giới hạn " + FREE_LIMIT + " việc.";
+      $("planBtn").textContent = "Gia hạn 24.000đ/tháng";
+      $("planStatus").textContent = "Hết thời gian dùng thử.";
+    }
+    if (st.kind !== lastPlanKind) { lastPlanKind = st.kind; renderTasks(); }
+  }
+  function openPay() { $("payModal").hidden = false; $("payClose").focus(); }
+  $("planBtn").addEventListener("click", function () { if (planState().kind === "paid") jump("planSec"); else openPay(); });
+  $("subBtn").addEventListener("click", openPay);
+  $("payClose").addEventListener("click", function () { $("payModal").hidden = true; });
+
+  // ================= SỔ VIỆC =================
+  var tasks = load("dhdn-tasks", null);
+  if (!tasks) {
+    var t0 = Date.now();
+    tasks = [
+      { id: "s1", t: "Ví dụ: gọi điện cho mẹ", due: t0 + 2 * 36e5, done: false, created: t0 },
+      { id: "s2", t: "Ví dụ: làm 30 phút bài tập đang trốn", due: t0 - 20 * MIN, done: false, created: t0, fired: true, warned: true },
+      { id: "s3", t: "Ví dụ: đi bộ 20 phút, để điện thoại ở nhà", due: 0, done: true, doneAt: t0, created: t0 }
+    ];
+    save("dhdn-tasks", tasks);
+  }
+  var view = "open";
+  function persistTasks() { save("dhdn-tasks", tasks); renderTasks(); }
+  function openTasks() { return tasks.filter(function (t) { return !t.done; }); }
+  function dueLabel(t, now) {
+    if (!t.due) return "Không hạn chót";
+    var diff = t.due - now, d = new Date(t.due);
+    var when = pad(d.getHours()) + ":" + pad(d.getMinutes()) + " · " + dstr(d);
+    if (t.done) return "Xong lúc " + (t.doneAt ? pad(new Date(t.doneAt).getHours()) + ":" + pad(new Date(t.doneAt).getMinutes()) + " · " + dstr(new Date(t.doneAt)) : "");
+    if (diff < 0) return "QUÁ HẠN " + dur(-diff) + " · hạn " + when;
+    return "Còn " + dur(diff) + " · hạn " + when;
+  }
   function renderTasks() {
-    var k = todayKey();
-    if (!pledges[k]) pledges[k] = [{ t: "", d: false }, { t: "", d: false }, { t: "", d: false }];
-    var list = pledges[k];
-    var box = $("tasks");
-    box.innerHTML = "";
-    list.forEach(function (item, i) {
-      var row = document.createElement("div");
-      row.className = "task" + (item.d ? " done" : "");
-      var cb = document.createElement("input");
-      cb.type = "checkbox"; cb.id = "task-done-" + i; cb.checked = item.d;
-      cb.setAttribute("aria-label", "Đã xong việc " + (i + 1));
-      var tx = document.createElement("input");
-      tx.type = "text"; tx.id = "task-text-" + i; tx.value = item.t; tx.placeholder = PLACEHOLDERS[i];
-      tx.setAttribute("aria-label", "Việc số " + (i + 1));
-      cb.addEventListener("change", function () { item.d = cb.checked; row.classList.toggle("done", cb.checked); persist(); });
-      tx.addEventListener("input", function () { item.t = tx.value; persist(); });
-      row.appendChild(cb); row.appendChild(tx); box.appendChild(row);
-    });
-    updateScore();
-  }
-  function persist() { save("dhdn-pledges", pledges); updateScore(); }
-  function allDone(list) { return list && list.every(function (x) { return x.d && x.t.trim(); }); }
-  function updateScore() {
-    var list = pledges[todayKey()] || [];
-    var done = list.filter(function (x) { return x.d && x.t.trim(); }).length;
-    var written = list.filter(function (x) { return x.t.trim(); }).length;
-    $("doneCount").textContent = done + "/3";
-    var msg;
-    if (done === 3) msg = "Xong cả ba. Hôm nay bạn đã sống thật sự.";
-    else if (done > 0) msg = "Tốt. Còn " + (3 - done) + " việc. Đồng hồ vẫn đang chạy.";
-    else if (written > 0) msg = "Đã viết ra rồi. Giờ đứng dậy làm việc đầu tiên.";
-    else msg = "Viết ra việc đầu tiên. Ngay bây giờ.";
-    $("doneMsg").textContent = msg;
-    var streak = 0, dt = new Date();
-    if (!allDone(pledges[todayKey(dt)])) dt.setDate(dt.getDate() - 1);
-    while (allDone(pledges[todayKey(dt)])) { streak++; dt.setDate(dt.getDate() - 1); }
+    if (!tasks || !plan) return;
+    var now = Date.now();
+    var list = tasks.filter(function (t) { return view === "open" ? !t.done : t.done; });
+    list.sort(view === "open"
+      ? function (a, b) { return (a.due || 9e15) - (b.due || 9e15); }
+      : function (a, b) { return (b.doneAt || 0) - (a.doneAt || 0); });
+    var ul = $("taskList");
+    if (!list.length) {
+      ul.innerHTML = '<li class="empty">' + (view === "open" ? "Không còn việc nào. Hoặc bạn đã làm hết, hoặc bạn chưa dám viết ra." : "Chưa xong việc nào.") + "</li>";
+    } else {
+      ul.innerHTML = list.map(function (t) {
+        var cls = t.done ? "done" : t.due && t.due < now ? "overdue" : t.due && t.due - now < 36e5 ? "soon" : "";
+        return '<li class="task ' + cls + '" data-id="' + esc(t.id) + '">' +
+          '<input type="checkbox" id="task-' + esc(t.id) + '" aria-label="Đánh dấu xong"' + (t.done ? " checked" : "") + ">" +
+          '<label for="task-' + esc(t.id) + '"><span class="t-title">' + esc(t.t) + '</span><span class="t-due">' + dueLabel(t, now) + "</span></label>" +
+          '<button type="button" class="del" aria-label="Xóa việc">×</button></li>';
+      }).join("");
+    }
+    var open = openTasks();
+    var pro = isPro();
+    var lim = $("limitNote");
+    if (pro) { lim.textContent = "Không giới hạn số việc. Báo động hạn chót đang bật."; lim.classList.remove("hit"); }
+    else {
+      lim.textContent = "Gói miễn phí: " + open.length + "/" + FREE_LIMIT + " việc chưa xong. Báo động hạn chót đã tắt.";
+      lim.classList.toggle("hit", open.length >= FREE_LIMIT);
+    }
+    $("addBtn").disabled = !pro && open.length >= FREE_LIMIT;
+    var sod = new Date(); sod.setHours(0, 0, 0, 0);
+    var doneToday = tasks.filter(function (t) { return t.done && t.doneAt >= sod.getTime(); }).length;
+    $("doneToday").textContent = doneToday;
+    $("doneMsg").textContent = doneToday === 0 ? "Chưa có gì. Ngày vẫn đang trôi." : doneToday < 3 ? "Có còn hơn không. Làm thêm một việc nữa." : "Hôm nay bạn đã thật sự sống.";
+    $("overdueN").textContent = open.filter(function (t) { return t.due && t.due < now; }).length;
+    var streak = 0, d = new Date(sod);
+    var doneDays = {};
+    tasks.forEach(function (t) { if (t.done && t.doneAt) { var x = new Date(t.doneAt); x.setHours(0, 0, 0, 0); doneDays[x.getTime()] = 1; } });
+    if (!doneDays[d.getTime()]) d.setDate(d.getDate() - 1);
+    while (doneDays[d.getTime()]) { streak++; d.setDate(d.getDate() - 1); }
     $("streak").textContent = streak;
   }
+  $("taskList").addEventListener("change", function (e) {
+    var li = e.target.closest(".task"); if (!li) return;
+    var t = tasks.find(function (x) { return x.id === li.dataset.id; }); if (!t) return;
+    t.done = e.target.checked; t.doneAt = t.done ? Date.now() : 0;
+    persistTasks();
+  });
+  $("taskList").addEventListener("click", function (e) {
+    if (!e.target.classList.contains("del")) return;
+    var id = e.target.closest(".task").dataset.id;
+    tasks = tasks.filter(function (x) { return x.id !== id; });
+    persistTasks();
+  });
+  $("addForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = $("newTitle").value.trim(); if (!title) return;
+    if (!isPro() && openTasks().length >= FREE_LIMIT) { openPay(); return; }
+    var dueVal = $("newDue").value, due = 0;
+    if (dueVal) { var p = dueVal.split(/[-T:]/).map(Number); due = new Date(p[0], p[1] - 1, p[2], p[3], p[4]).getTime(); }
+    tasks.push({ id: "t" + Date.now().toString(36), t: title, due: due, done: false, created: Date.now() });
+    $("newTitle").value = ""; $("newDue").value = "";
+    view = "open"; setTab(); persistTasks();
+  });
+  function setTab() {
+    $("tabOpen").setAttribute("aria-selected", String(view === "open")); $("tabOpen").setAttribute("aria-pressed", String(view === "open"));
+    $("tabDone").setAttribute("aria-selected", String(view === "done")); $("tabDone").setAttribute("aria-pressed", String(view === "done"));
+  }
+  $("tabOpen").addEventListener("click", function () { view = "open"; setTab(); renderTasks(); });
+  $("tabDone").addEventListener("click", function () { view = "done"; setTab(); renderTasks(); });
 
-  // ---------- quotes ----------
-  var QUOTES = [
-    ["Nếu hôm nay là ngày cuối cùng của đời tôi, tôi có muốn làm điều tôi sắp làm hôm nay không?", "Steve Jobs, diễn văn tại Stanford, 2005"],
+  // ---- nhắc nhở ----
+  var alarmId = null;
+  function checkReminders(now) {
+    if (!tasks || !plan || !isPro() || !$("alarm").hidden) return;
+    for (var i = 0; i < tasks.length; i++) {
+      var t = tasks[i];
+      if (t.done || !t.due) continue;
+      if (t.due <= now && !t.fired) { t.fired = true; t.warned = true; save("dhdn-tasks", tasks); fireAlarm(t, true); return; }
+      if (t.due - now <= 10 * MIN && t.due > now && !t.warned) { t.warned = true; save("dhdn-tasks", tasks); fireAlarm(t, false); return; }
+    }
+  }
+  function fireAlarm(t, overdue) {
+    alarmId = t.id;
+    $("alarmKind").textContent = overdue ? "Đã đến hạn" : "Còn 10 phút";
+    $("alarmTitle").textContent = overdue ? "Hết giờ." : "Sắp hết giờ.";
+    $("alarmWhat").textContent = t.t;
+    $("alarmSub").textContent = overdue ? "Một phút trì hoãn nữa là một phút bạn không bao giờ lấy lại." : "Bắt đầu ngay bây giờ thì vẫn kịp.";
+    $("alarm").hidden = false; $("alarmDone").focus();
+    renderTasks();
+    if (actx) { var tt = actx.currentTime + .02; for (var k = 0; k < 4; k++) { thump(tt + k * .5, 62, .9); thump(tt + k * .5 + .22, 52, .55); } }
+    try {
+      if ("Notification" in window && Notification.permission === "granted") new Notification(overdue ? "Hết giờ: " + t.t : "Còn 10 phút: " + t.t, { body: "Đồng hồ đời người" });
+    } catch (e) {}
+  }
+  function closeAlarm() { $("alarm").hidden = true; alarmId = null; }
+  $("alarmDone").addEventListener("click", function () {
+    var t = tasks.find(function (x) { return x.id === alarmId; });
+    if (t) { t.done = true; t.doneAt = Date.now(); }
+    closeAlarm(); persistTasks();
+  });
+  $("alarmSnooze").addEventListener("click", function () {
+    var t = tasks.find(function (x) { return x.id === alarmId; });
+    if (t) { t.due = Date.now() + 10 * MIN; t.fired = false; t.warned = true; }
+    closeAlarm(); persistTasks();
+  });
+  $("alarmClose").addEventListener("click", closeAlarm);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { $("payModal").hidden = true; closeAlarm(); } });
+
+  $("notifBtn").addEventListener("click", function () {
+    var hint = $("notifHint");
+    if (!isPro()) { hint.textContent = "Thông báo thuộc gói Người Sống."; openPay(); return; }
+    if (!("Notification" in window)) { hint.textContent = "Trình duyệt này không hỗ trợ thông báo. Báo động trong trang vẫn hoạt động."; return; }
+    try {
+      Promise.resolve(Notification.requestPermission()).then(function (p) {
+        hint.textContent = p === "granted" ? "Đã bật. Máy sẽ báo khi đến hạn, miễn là trang còn mở." : "Không được cấp quyền ở đây. Mở bản index.html trong trình duyệt để bật. Báo động trong trang vẫn hoạt động.";
+      }).catch(function () { hint.textContent = "Không được cấp quyền ở đây. Báo động trong trang vẫn hoạt động."; });
+    } catch (e) { hint.textContent = "Không được cấp quyền ở đây. Báo động trong trang vẫn hoạt động."; }
+  });
+
+  // ================= VĂN BIA =================
+  var Q = [
     ["Không phải ta có quá ít thời gian, mà là ta lãng phí quá nhiều.", "Seneca, Về sự ngắn ngủi của đời người"],
-    ["Hãy sống mỗi ngày như thể đó là ngày cuối cùng, không vội vã, không uể oải, không giả tạo.", "Marcus Aurelius, Suy tưởng"],
+    ["Nếu hôm nay là ngày cuối cùng của đời tôi, tôi có muốn làm điều tôi sắp làm hôm nay không?", "Steve Jobs, Stanford, 2005"],
+    ["Đừng sống như thể bạn còn cả vạn năm. Cái chết đang lơ lửng trên đầu bạn.", "Marcus Aurelius, Suy tưởng"],
     ["Thời gian thấm thoắt thoi đưa, nó đi đi mãi có chờ đợi ai.", "Ca dao Việt Nam"],
-    ["Một năm khởi đầu từ mùa xuân, một đời khởi đầu từ tuổi trẻ.", "Hồ Chí Minh"],
-    ["Ngày mai là cái cớ đẹp nhất mà sự lười biếng từng nghĩ ra.", "Đồng hồ đời người"],
-    ["Bạn có thể trì hoãn, nhưng thời gian thì không.", "Benjamin Franklin"],
-    ["Mỗi ô trống trong lưới kia là một tuần bạn vẫn còn kịp thay đổi.", "Đồng hồ đời người"]
+    ["Ở đây yên nghỉ một người đã định bắt đầu từ ngày mai.", "Văn bia không ai muốn có"],
+    ["Ngày mai là cái cớ đẹp nhất mà sự lười biếng từng nghĩ ra.", "Đồng hồ đời người"]
   ];
-  var qi = Math.floor(Math.random() * QUOTES.length);
-  function showQuote() {
-    $("quoteText").textContent = "“" + QUOTES[qi][0] + "”";
-    $("quoteBy").textContent = "— " + QUOTES[qi][1];
-  }
-  $("nextQuote").addEventListener("click", function () { qi = (qi + 1) % QUOTES.length; showQuote(); });
+  var qi = Math.floor(Math.random() * Q.length);
+  function showQ() { $("quoteText").textContent = "“" + Q[qi][0] + "”"; $("quoteBy").textContent = Q[qi][1]; }
+  $("nextQuote").addEventListener("click", function () { qi = (qi + 1) % Q.length; showQ(); });
 
-  // ---------- time on page ----------
-  var openedAt = Date.now();
-  function onPage() {
-    var s = Math.floor((Date.now() - openedAt) / 1000);
-    $("onPage").textContent = s < 60 ? s + " giây" : Math.floor(s / 60) + " phút " + (s % 60) + " giây";
-  }
+  // ================= KHÔNG KHÍ =================
+  var grain = $("grain"), gctx = grain.getContext("2d"), gImg;
+  function sizeGrain() { grain.width = Math.ceil(innerWidth / 3); grain.height = Math.ceil(innerHeight / 3); gImg = gctx.createImageData(grain.width, grain.height); }
+  function paintGrain() { var d = gImg.data; for (var i = 0; i < d.length; i += 4) { var v = Math.random() * 255 | 0; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gctx.putImageData(gImg, 0, 0); }
+  sizeGrain(); paintGrain();
+  if (!reduce) setInterval(paintGrain, 90);
+  var lamp = $("lamp");
+  window.addEventListener("pointermove", function (e) { lamp.style.setProperty("--mx", e.clientX + "px"); lamp.style.setProperty("--my", e.clientY + "px"); }, { passive: true });
 
-  function renderAll() { tick(); renderCounts(); drawWeeks(); }
-  renderAll(); showQuote(); onPage();
-  setInterval(function () { tick(); onPage(); }, 1000);
+  var heartOn = false, actx;
+  $("heartBtn").addEventListener("click", function () {
+    heartOn = !heartOn;
+    this.setAttribute("aria-pressed", String(heartOn));
+    this.textContent = heartOn ? "Tắt nhịp tim" : "Nghe nhịp tim";
+    if (heartOn) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch (e) { heartOn = false; } }
+  });
+  function thump(t, f, g) {
+    var o = actx.createOscillator(), v = actx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .55, t + .14);
+    v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(g, t + .015); v.gain.exponentialRampToValueAtTime(0.0001, t + .2);
+    o.connect(v).connect(actx.destination); o.start(t); o.stop(t + .25);
+  }
+  function beat() { if (!actx) return; var t = actx.currentTime + .02; thump(t, 62, .9); thump(t + .22, 52, .55); }
+
+  var opened = Date.now();
+  function onPage() { var s = Math.floor((Date.now() - opened) / 1000); $("onPage").textContent = s < 60 ? s + " giây" : Math.floor(s / 60) + " phút " + (s % 60) + " giây"; }
+
+  recompute(); renderPlan(); renderTasks(); showQ(); onPage();
+  setInterval(function () { tick(); onPage(); }, 250);
   setInterval(renderCounts, 60000);
+  window.__dhdn = { compute: compute, plan: function () { return plan; } };
 })();
 </script>
