@@ -1,0 +1,14 @@
+{
+  "name": "dong-ho-doi-nguoi",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "22.x" },
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test": "node test/run.js"
+  },
+  "dependencies": {
+    "@payos/node": "2.0.5",
+    "@vercel/blob": "2.8.2"
+  }
+}

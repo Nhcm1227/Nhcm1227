@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Quản Trị Đồng Hồ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@700;900&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Bảng điều khiển: tóm tắt trước, chi tiết sau. Cùng bảng màu với trang chính nhưng không hiệu ứng. */
+:root {
+  color-scheme: dark;
+  --void: #0F0D0C; --ash: #1A1716; --panel: #151210; --bone: #E8E1D3; --bone-dim: #ABA396;
+  --rust: #3A322E; --blood: #A8120C; --blood-hi: #D21A12; --moss: #8FA88A; --amber: #D9A441;
+  --f-goth: "Grenze Gotisch", Georgia, serif;
+  --f-body: "Spectral", Georgia, serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--void); color: var(--bone); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 60px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+h1 { font-family: var(--f-goth); font-size: 2.2rem; margin: 0; line-height: 1; }
+h1 span { color: var(--blood-hi); }
+h2 { font-family: var(--f-mono); font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); font-weight: 400; margin: 0 0 12px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+a { color: var(--bone); }
+button, select, input {
+  font-family: var(--f-mono); font-size: .82rem; color: var(--bone); background: var(--ash);
+  border: 1px solid var(--rust); padding: 8px 12px; border-radius: 0;
+}
+button { cursor: pointer; }
+button:hover { border-color: var(--blood-hi); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--blood-hi); outline-offset: 2px; }
+.primary { background: var(--blood); border-color: var(--blood); color: #fff; }
+.card { background: var(--panel); border: 1px solid var(--rust); padding: 20px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rust); border: 1px solid var(--rust); }
+.stat { background: var(--panel); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.stat .n { font-family: var(--f-mono); font-size: 1.7rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .l { font-size: .82rem; color: var(--bone-dim); }
+.stat.money .n { color: var(--moss); }
+.cfg { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.cfg dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 14px; font-size: .9rem; }
+.cfg dt { color: var(--bone-dim); }
+.cfg dd { margin: 0; font-family: var(--f-mono); font-size: .8rem; overflow-wrap: anywhere; }
+.pill { display: inline-block; font-family: var(--f-mono); font-size: .72rem; padding: 2px 8px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok, .pill.paid { color: var(--moss); }
+.pill.off, .pill.banned, .pill.free { color: var(--blood-hi); }
+.pill.trial, .pill.PENDING { color: var(--amber); }
+.pill.PAID { color: var(--moss); }
+.pill.admin { color: var(--bone); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--rust); }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 860px; }
+th { text-align: left; font-family: var(--f-mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); font-weight: 400; padding: 10px; border-bottom: 1px solid var(--bone-dim); background: var(--panel); position: sticky; top: 0; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--rust); vertical-align: middle; }
+td.num { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.mono { font-family: var(--f-mono); font-size: .78rem; white-space: nowrap; }
+.act { display: flex; gap: 6px; flex-wrap: nowrap; }
+.act select { padding: 6px 8px; }
+.act input { width: 56px; padding: 6px 8px; }
+.act button { padding: 6px 10px; }
+.msg { font-family: var(--f-mono); font-size: .85rem; min-height: 1.3em; }
+.msg.bad { color: #ff8a80; }
+.msg.good { color: var(--moss); }
+.gate { max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+.gate input { width: 100%; padding: 10px 12px; font-size: .95rem; }
+.hint { color: var(--bone-dim); font-size: .88rem; font-style: italic; }
+.copy { padding: 2px 8px; margin-left: 6px; font-size: .7rem; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat .n { font-size: 1.3rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Quản trị <span>đồng hồ</span></h1>
+    <div class="row">
+      <span class="hint" id="whoami"></span>
+      <button id="refresh" type="button" hidden>Tải lại</button>
+      <a href="/">Về trang chính</a>
+    </div>
+  </header>
+
+  <section id="loginGate" class="card gate" hidden>
+    <h2>Đăng nhập tài khoản quản trị</h2>
+    <form id="loginForm" class="gate" novalidate>
+      <input id="lgEmail" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
+      <input id="lgPass" type="password" placeholder="Mật khẩu" autocomplete="current-password" aria-label="Mật khẩu">
+      <button class="primary" type="submit">Đăng nhập</button>
+      <p class="msg bad" id="lgMsg" role="alert"></p>
+    </form>
+    <p class="hint">Chưa có tài khoản? Tạo ở <a href="/">trang chính</a> rồi quay lại đây.</p>
+  </section>
+
+  <section id="claimGate" class="card gate" hidden>
+    <h2>Nhận quyền quản trị</h2>
+    <p>Tài khoản này chưa phải quản trị viên. Nhập mã quản trị (chỉ dùng được một lần) để nhận quyền.</p>
+    <form id="claimForm" class="gate" novalidate>
+      <input id="claimCode" type="text" placeholder="Mã quản trị" autocomplete="off" aria-label="Mã quản trị">
+      <button class="primary" type="submit">Nhận quyền</button>
+      <p class="msg bad" id="claimMsg" role="alert"></p>
+    </form>
+  </section>
+
+  <div id="dash" hidden>
+    <div class="wrap">
+      <section>
+        <h2>Tổng quan</h2>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="cfg">
+        <div class="card">
+          <h2>Cổng thanh toán</h2>
+          <dl id="cfgPay"></dl>
+        </div>
+        <div class="card">
+          <h2>Địa chỉ cần dán vào trang của cổng thanh toán</h2>
+          <dl id="cfgUrls"></dl>
+        </div>
+      </section>
+
+      <section>
+        <div class="row" style="justify-content:space-between;margin-bottom:12px">
+          <h2 style="margin:0">Người dùng</h2>
+          <div class="row">
+            <input id="search" type="search" placeholder="Tìm theo email hoặc tên" aria-label="Tìm người dùng">
+            <select id="filter" aria-label="Lọc theo gói">
+              <option value="">Mọi gói</option>
+              <option value="trial">Đang dùng thử</option>
+              <option value="paid">Đang trả phí</option>
+              <option value="free">Miễn phí</option>
+              <option value="banned">Bị khóa</option>
+            </select>
+          </div>
+        </div>
+        <p class="msg" id="actMsg" role="status"></p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Email</th><th>Gói</th><th>Hết hạn</th><th>Đăng ký</th><th>Lần cuối vào</th><th>Thao tác</th></tr></thead>
+            <tbody id="users"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Đơn thanh toán</h2>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Mã đơn</th><th>Email</th><th>Gói</th><th style="text-align:right">Số tiền</th><th>Cách trả</th><th>Trạng thái</th><th>Tạo lúc</th><th>Trả lúc</th></tr></thead>
+            <tbody id="orders"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var money = function (n) { return Number(n || 0).toLocaleString("vi-VN") + "đ"; };
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  function dt(ms) { if (!ms) return "—"; var d = new Date(ms); return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear() + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  var PLAN = { trial: "Dùng thử", paid: "Trả phí", free: "Miễn phí" };
+  var STATUS = { PAID: "Đã trả", PENDING: "Chờ trả", FAILED: "Lỗi tạo link", FAILED_PAYMENT: "Thanh toán lỗi", CANCELLED: "Đã hủy", EXPIRED: "Hết hạn" };
+  var METHOD = { qr: "Mã QR", card: "Thẻ Visa/Master" };
+  var data = null;
+
+  function api(path, opts) {
+    opts = opts || {};
+    var init = { method: opts.method || "GET", credentials: "same-origin", headers: {} };
+    if (opts.body) { init.headers["content-type"] = "application/json"; init.body = JSON.stringify(opts.body); }
+    return fetch(path, init).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); });
+  }
+
+  function boot() {
+    api("/api/me").then(function (x) {
+      var u = x.j.user;
+      $("loginGate").hidden = !!u; $("claimGate").hidden = true; $("dash").hidden = true; $("refresh").hidden = true;
+      $("whoami").textContent = u ? u.email : "";
+      if (!u) return;
+      if (u.role !== "admin") { $("claimGate").hidden = false; return; }
+      $("dash").hidden = false; $("refresh").hidden = false;
+      load();
+    });
+  }
+
+  function load() {
+    api("/api/admin/overview").then(function (x) {
+      if (!x.ok) { $("actMsg").className = "msg bad"; $("actMsg").textContent = x.j.error || "Không tải được dữ liệu."; return; }
+      data = x.j; render();
+    });
+  }
+
+  function render() {
+    var s = data.stats;
+    var tiles = [
+      [s.users, "người dùng"], [s.newToday, "đăng ký 24 giờ qua"], [s.trial, "đang dùng thử"],
+      [s.paid, "đang trả phí"], [s.free, "hết dùng thử, chưa trả"], [s.banned, "bị khóa"],
+      [money(s.revenueMonth), "doanh thu tháng này", 1], [money(s.revenue), "doanh thu tất cả (" + s.ordersPaid + " đơn)", 1]
+    ];
+    $("stats").innerHTML = tiles.map(function (t) { return '<div class="stat' + (t[2] ? " money" : "") + '"><span class="n">' + esc(t[0]) + '</span><span class="l">' + t[1] + "</span></div>"; }).join("");
+
+    var c = data.config, p = c.payments;
+    var pill = function (on) { return on ? '<span class="pill ok">Đã bật</span>' : '<span class="pill off">Chưa bật</span>'; };
+    $("cfgPay").innerHTML =
+      "<dt>Mã QR qua payOS</dt><dd>" + pill(p.payos) + "</dd>" +
+      "<dt>Thẻ Visa/Master qua VNPAY</dt><dd>" + pill(p.vnpay) + (p.vnpay ? "" : " <span class=\"hint\">VNPAY cũng nhận QR nếu chưa có payOS</span>") + "</dd>" +
+      "<dt>Giá mỗi tháng</dt><dd>" + money(c.price) + "</dd>" +
+      "<dt>Lưu dữ liệu</dt><dd>" + esc(c.storage) + "</dd>";
+    var urlRow = function (label, url) { return "<dt>" + label + "</dt><dd>" + esc(url) + '<button type="button" class="copy" data-copy="' + esc(url) + '">Chép</button></dd>'; };
+    $("cfgUrls").innerHTML = urlRow("payOS: Webhook URL", c.payosWebhook) + urlRow("VNPAY: IPN URL", c.vnpayIpn) + urlRow("VNPAY: Return URL", c.vnpayReturn);
+    renderUsers(); renderOrders();
+  }
+
+  function renderUsers() {
+    var q = $("search").value.trim().toLowerCase(), f = $("filter").value;
+    var rows = data.users.filter(function (u) {
+      if (q && (u.email + " " + u.name).toLowerCase().indexOf(q) < 0) return false;
+      if (f === "banned") return u.banned;
+      if (f) return u.plan.kind === f && !u.banned;
+      return true;
+    });
+    if (!rows.length) { $("users").innerHTML = '<tr><td colspan="6" class="hint">Không có người dùng nào khớp.</td></tr>'; return; }
+    $("users").innerHTML = rows.map(function (u) {
+      var badges = '<span class="pill ' + u.plan.kind + '">' + PLAN[u.plan.kind] + "</span>" +
+        (u.banned ? ' <span class="pill banned">Bị khóa</span>' : "") + (u.role === "admin" ? ' <span class="pill admin">Quản trị</span>' : "");
+      return "<tr><td>" + esc(u.email) + (u.name ? '<br><span class="hint">' + esc(u.name) + "</span>" : "") + "</td><td>" + badges +
+        '</td><td class="mono">' + dt(u.plan.until) + '</td><td class="mono">' + dt(u.createdAt) + '</td><td class="mono">' + dt(u.lastLoginAt) +
+        '</td><td><div class="act" data-uid="' + esc(u.id) + '">' +
+        '<select aria-label="Thao tác"><option value="grant">Cấp thêm tháng</option><option value="trial">Thêm ngày dùng thử</option><option value="revoke">Hủy gói trả phí</option>' +
+        '<option value="reset">Đặt lại mật khẩu</option><option value="logout">Đăng xuất mọi máy</option>' +
+        (u.banned ? '<option value="unban">Mở khóa</option>' : '<option value="ban">Khóa tài khoản</option>') +
+        (u.role === "admin" ? '<option value="unadmin">Bỏ quyền quản trị</option>' : '<option value="admin">Cho làm quản trị</option>') +
+        '</select><input type="number" min="1" max="60" value="1" aria-label="Số lượng"><button type="button">Làm</button></div></td></tr>';
+    }).join("");
+  }
+
+  function renderOrders() {
+    if (!data.orders.length) { $("orders").innerHTML = '<tr><td colspan="8" class="hint">Chưa có đơn nào.</td></tr>'; return; }
+    $("orders").innerHTML = data.orders.map(function (o) {
+      return '<tr><td class="mono">' + o.orderCode + "</td><td>" + esc(o.email) + "</td><td>" + o.months + ' tháng</td><td class="num">' + money(o.amount) +
+        "</td><td>" + (METHOD[o.method] || o.method) + ' <span class="hint">' + esc(o.provider) + '</span></td><td><span class="pill ' + esc(o.status) + '">' + (STATUS[o.status] || esc(o.status)) +
+        '</span></td><td class="mono">' + dt(o.createdAt) + '</td><td class="mono">' + dt(o.paidAt) + "</td></tr>";
+    }).join("");
+  }
+
+  $("users").addEventListener("change", function (e) {
+    if (e.target.tagName !== "SELECT") return;
+    var input = e.target.parentNode.querySelector("input");
+    input.hidden = ["grant", "trial"].indexOf(e.target.value) < 0;
+  });
+  $("users").addEventListener("click", function (e) {
+    if (e.target.tagName !== "BUTTON") return;
+    var box = e.target.parentNode, action = box.querySelector("select").value, value = Number(box.querySelector("input").value);
+    var email = (data.users.find(function (u) { return u.id === box.dataset.uid; }) || {}).email;
+    var danger = { ban: 1, reset: 1, revoke: 1, unadmin: 1 };
+    if (danger[action] && e.target.dataset.armed !== "1") {
+      e.target.dataset.armed = "1"; e.target.textContent = "Chắc chắn?";
+      setTimeout(function () { e.target.dataset.armed = ""; e.target.textContent = "Làm"; }, 4000);
+      return;
+    }
+    e.target.disabled = true;
+    api("/api/admin/action", { method: "POST", body: { uid: box.dataset.uid, action: action, value: value } }).then(function (x) {
+      e.target.disabled = false; e.target.dataset.armed = ""; e.target.textContent = "Làm";
+      var m = $("actMsg");
+      if (!x.ok) { m.className = "msg bad"; m.textContent = x.j.error || "Không thành công."; return; }
+      m.className = "msg good";
+      m.textContent = x.j.tempPassword
+        ? "Mật khẩu tạm của " + email + ": " + x.j.tempPassword + " (gửi riêng cho họ, họ nên đổi ngay)."
+        : "Đã cập nhật " + email + ".";
+      load();
+    });
+  });
+  $("search").addEventListener("input", function () { if (data) renderUsers(); });
+  $("filter").addEventListener("change", function () { if (data) renderUsers(); });
+  $("refresh").addEventListener("click", load);
+  document.addEventListener("click", function (e) {
+    var v = e.target.dataset && e.target.dataset.copy; if (!v) return;
+    var done = function () { e.target.textContent = "Đã chép"; setTimeout(function () { e.target.textContent = "Chép"; }, 1500); };
+    try { navigator.clipboard.writeText(v).then(done, function () {}); } catch (err) {}
+  });
+
+  $("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    api("/api/auth/login", { method: "POST", body: { email: $("lgEmail").value, password: $("lgPass").value } }).then(function (x) {
+      if (!x.ok) { $("lgMsg").textContent = x.j.error || "Không đăng nhập được."; return; }
+      boot();
+    });
+  });
+  $("claimForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    api("/api/admin/claim", { method: "POST", body: { code: $("claimCode").value } }).then(function (x) {
+      if (!x.ok) { $("claimMsg").textContent = x.j.error || "Không thành công."; return; }
+      boot();
+    });
+  });
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Đồng Hồ Đời Người</title>
+<meta name="description" content="Đếm ngược những ngày còn lại, dự báo tuổi thọ từ thói quen và bệnh tật, kèm sổ việc có báo động hạn chót.">
+<meta name="theme-color" content="#0F0D0C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F0D0C'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23E8E1D3' stroke-width='2'/%3E%3Cpath d='M16 9v8l5 3' stroke='%23D21A12' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;700;900&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: một hồ sơ khám nghiệm đọc từ trên xuống: đồng hồ, giấy báo tử, tờ khai, biên bản, sổ việc, gia hạn.
+   Cố ý chỉ một giao diện tối: trang này là căn phòng không bật đèn. */
+:root {
+  color-scheme: dark;
+  --void: #0F0D0C;
+  --ash: #1A1716;
+  --bone: #E8E1D3;
+  --bone-dim: #ABA396;
+  --rust: #3A322E;
+  --blood: #A8120C;
+  --blood-hi: #D21A12;
+  --blood-glow: rgba(168, 18, 12, .35);
+  --moss: #8FA88A;
+  --paper: #CFC5AE;
+  --paper-ink: #1B1510;
+  --paper-line: #8C7F66;
+  --f-goth: "Grenze Gotisch", "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
+  --f-body: "Spectral", Georgia, "Times New Roman", serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--void); }
+body {
+  background: var(--void); color: var(--bone);
+  font-family: var(--f-body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 110px;
+  overflow-x: hidden;
+}
+::selection { background: var(--blood); color: var(--bone); }
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 84px; position: relative; z-index: 2; }
+h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-family: var(--f-goth); font-size: clamp(2.4rem, 7vw, 4rem); line-height: .95; letter-spacing: .005em; }
+p { margin: 0; }
+.label { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); }
+.lede { color: var(--bone-dim); max-width: 60ch; font-style: italic; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 22px; }
+.red { color: var(--blood-hi); }
+.head-block { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- atmosphere ---------- */
+#grain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; opacity: .035; mix-blend-mode: screen; }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 41; box-shadow: inset 0 0 120px 0 rgba(0,0,0,.55); }
+
+/* ---------- top ---------- */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--f-goth); font-size: 1.7rem; font-weight: 900; line-height: 1; }
+.brand span { color: var(--blood-hi); }
+.top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+button {
+  font-family: var(--f-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; color: var(--bone); background: transparent;
+  border: 1px solid var(--rust); padding: 10px 16px; border-radius: 0;
+}
+button:hover { border-color: var(--blood-hi); color: #fff; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--blood-hi); outline-offset: 3px; }
+button[aria-pressed="true"], .btn-blood { background: var(--blood); border-color: var(--blood); color: #fff; }
+.btn-blood:hover { background: var(--blood-hi); border-color: var(--blood-hi); }
+.planbar {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px;
+  border: 1px solid var(--rust); padding: 8px 12px; font-family: var(--f-mono); font-size: .78rem; color: var(--bone-dim);
+}
+.planbar b { color: var(--bone); font-weight: 600; }
+.planbar.expired { border-color: var(--blood); color: var(--bone); }
+.planbar button { padding: 6px 12px; }
+
+/* ---------- hero ---------- */
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.hero .label { color: var(--blood-hi); }
+.days {
+  font-family: var(--f-goth); font-weight: 900; line-height: .78;
+  font-size: clamp(6rem, 25vw, 17rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  color: var(--bone); text-shadow: 0 0 60px var(--blood-glow);
+  overflow-wrap: anywhere;
+}
+.days.glitch { animation: glitch .22s steps(2) 1; }
+.days-unit { font-family: var(--f-body); font-style: italic; font-size: clamp(1.3rem, 3.4vw, 2rem); color: var(--bone-dim); }
+.clock { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-family: var(--f-mono); }
+.clock div { display: flex; flex-direction: column; }
+.clock b { font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.clock span { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); }
+.clock .sec b { color: var(--blood-hi); }
+.pulse-line { margin-top: 14px; color: var(--bone-dim); font-size: .95rem; }
+.pulse-line b { font-family: var(--f-mono); color: var(--bone); font-weight: 400; }
+
+@keyframes blink { 0%, 92% { opacity: 1; } 93% { opacity: .2; } 95% { opacity: 1; } 97% { opacity: .35; } }
+@keyframes glitch {
+  0% { transform: translate(-4px, 1px) skewX(-6deg); text-shadow: 6px 0 var(--blood), -6px 0 #2a6f73; }
+  50% { transform: translate(5px, -2px) skewX(4deg); text-shadow: -8px 0 var(--blood), 4px 0 #2a6f73; clip-path: inset(10% 0 35% 0); }
+  100% { transform: none; text-shadow: 0 0 60px var(--blood-glow); }
+}
+
+/* ---------- death certificate ---------- */
+.cert {
+  background: var(--paper); color: var(--paper-ink);
+  background-image:
+    radial-gradient(ellipse at 18% 12%, rgba(90, 60, 20, .22), transparent 45%),
+    radial-gradient(ellipse at 88% 90%, rgba(70, 40, 10, .28), transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(60, 40, 20, .07) 31px 32px);
+  padding: clamp(22px, 5vw, 48px); position: relative; transform: rotate(-.6deg);
+  box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px #000;
+  max-width: 760px; width: 100%; align-self: center;
+}
+.cert-inner { border: 2px solid var(--paper-ink); outline: 1px solid var(--paper-ink); outline-offset: 4px; padding: clamp(16px, 4vw, 32px); display: flex; flex-direction: column; gap: 18px; }
+.cert-head { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.cert-head .gov { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; }
+.cert-head h3 { font-family: var(--f-goth); font-size: clamp(2.4rem, 8vw, 3.8rem); font-weight: 900; line-height: 1; }
+.cert-head .no { font-family: var(--f-mono); font-size: .75rem; }
+.cert dl { margin: 0; display: grid; grid-template-columns: minmax(0, 13em) minmax(0, 1fr); gap: 10px 16px; }
+.cert dt { font-style: italic; font-size: .95rem; }
+.cert dd { margin: 0; font-family: var(--f-mono); font-size: 1rem; border-bottom: 1px dotted var(--paper-line); min-width: 0; overflow-wrap: anywhere; }
+.cert dd.big { font-size: 1.3rem; font-weight: 600; }
+.stamp {
+  position: absolute; right: clamp(10px, 5vw, 46px); bottom: clamp(30px, 8vw, 70px);
+  font-family: var(--f-mono); font-weight: 600; font-size: clamp(.8rem, 2.4vw, 1.05rem); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--blood); border: 3px double var(--blood); padding: 8px 14px; transform: rotate(-14deg);
+  opacity: .82; mix-blend-mode: multiply; text-align: center; line-height: 1.3; pointer-events: none;
+}
+.cert-foot { font-size: .8rem; font-style: italic; border-top: 1px solid var(--paper-line); padding-top: 12px; padding-right: 9em; }
+
+/* ---------- form ---------- */
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px 28px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .flabel { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); }
+input[type="date"], input[type="datetime-local"], input[type="number"], input[type="text"].line, select {
+  font-family: var(--f-mono); font-size: 1rem; color: var(--bone);
+  background: var(--ash); border: none; border-bottom: 1px solid var(--bone-dim); border-radius: 0;
+  padding: 9px 4px; width: 100%;
+}
+input:hover, select:hover { border-bottom-color: var(--blood-hi); }
+.seg { display: flex; }
+.seg label { flex: 1; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; text-align: center; font-family: var(--f-mono); font-size: .85rem; padding: 9px 6px; border: 1px solid var(--rust); }
+.seg input:checked + span { background: var(--bone); color: var(--void); border-color: var(--bone); }
+.seg input:focus-visible + span { outline: 2px solid var(--blood-hi); outline-offset: 2px; }
+.hint { font-size: .8rem; color: var(--bone-dim); font-style: italic; }
+.ills { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
+.ill { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rust); cursor: pointer; }
+.ill input { width: 18px; height: 18px; accent-color: var(--blood); margin: 0; }
+.ill .cost { font-family: var(--f-mono); font-size: .8rem; color: var(--blood-hi); }
+.ill:has(input:checked) { color: #fff; }
+.note-box { border-left: 2px solid var(--blood); padding: 4px 0 4px 14px; font-size: .88rem; color: var(--bone-dim); max-width: 70ch; }
+
+/* ---------- ledger ---------- */
+.ledger-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; min-width: 520px; }
+th { font-family: var(--f-mono); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--bone-dim); text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--bone-dim); font-weight: 400; }
+td { padding: 11px 8px; border-bottom: 1px solid var(--rust); vertical-align: top; }
+td.yrs { font-family: var(--f-mono); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.yrs.neg { color: var(--blood-hi); }
+td.yrs.pos { color: var(--moss); }
+td.src { font-size: .8rem; color: var(--bone-dim); font-style: italic; }
+tr.total td { border-top: 1px solid var(--bone); border-bottom: none; font-weight: 600; font-size: 1.1rem; }
+
+/* ---------- counts ---------- */
+.counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 34px 28px; }
+.count { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--rust); padding-top: 14px; }
+.count .n { font-family: var(--f-goth); font-weight: 900; font-size: 3.6rem; line-height: .9; font-variant-numeric: tabular-nums; }
+.count.alert .n { color: var(--blood-hi); }
+.count .what { font-weight: 600; }
+.count .why { font-size: .86rem; color: var(--bone-dim); font-style: italic; }
+
+/* ---------- weeks ---------- */
+canvas#weeks { display: block; width: 100%; max-width: 720px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); }
+
+/* ---------- task tracker ---------- */
+.tracker { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.addform { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 210px) auto; gap: 10px; align-items: end; }
+.addform .field { gap: 4px; }
+.tabs { display: flex; gap: 0; margin-top: 6px; }
+.tabs button { flex: 0 0 auto; border-color: var(--rust); }
+.tabs button + button { border-left: none; }
+.tasklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.task { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 12px; align-items: center; border-bottom: 1px solid var(--rust); padding: 12px 0; }
+.task input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--blood); margin: 0; }
+.task .t-title { font-size: 1.05rem; overflow-wrap: anywhere; }
+.task .t-due { display: block; font-family: var(--f-mono); font-size: .74rem; color: var(--bone-dim); margin-top: 2px; }
+.task.overdue .t-due { color: var(--blood-hi); font-weight: 600; }
+.task.overdue .t-title { color: #fff; }
+.task.soon .t-due { color: #D9A441; }
+.task.done .t-title { text-decoration: line-through; text-decoration-color: var(--blood); color: var(--bone-dim); }
+.task .del { border: none; padding: 6px 8px; color: var(--bone-dim); font-size: 1rem; letter-spacing: 0; }
+.task .del:hover { color: var(--blood-hi); }
+.empty { padding: 22px 0; color: var(--bone-dim); font-style: italic; border-bottom: 1px solid var(--rust); }
+.side { display: flex; flex-direction: column; gap: 22px; }
+.stat .n { font-family: var(--f-goth); font-weight: 900; font-size: 4.2rem; line-height: .85; }
+.stat .msg { font-style: italic; margin-top: 6px; }
+.limit { font-family: var(--f-mono); font-size: .78rem; color: var(--bone-dim); }
+.limit.hit { color: var(--blood-hi); }
+.lock { font-family: var(--f-mono); font-size: .72rem; color: var(--blood-hi); letter-spacing: .08em; }
+
+/* ---------- market ---------- */
+.market { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.wares { display: flex; flex-direction: column; }
+.ware { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rust); }
+.ware .wname { font-size: 1.05rem; }
+.ware .wsrc { display: block; font-size: .78rem; color: var(--bone-dim); font-style: italic; }
+.ware .wval { font-family: var(--f-mono); font-weight: 600; white-space: nowrap; color: var(--moss); }
+.ware.sell .wval { color: var(--blood-hi); }
+.ware .wcount { display: block; font-family: var(--f-mono); font-size: .72rem; color: var(--bone-dim); font-style: normal; }
+.ware button { min-width: 92px; }
+.ware.sell button { border-color: var(--blood); }
+.ware-group { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--bone-dim); padding: 18px 0 4px; }
+.balance .n { font-family: var(--f-goth); font-weight: 900; font-size: 3.6rem; line-height: .9; }
+.balance .n.pos { color: var(--moss); }
+.balance .n.neg { color: var(--blood-hi); }
+.log { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+.log li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rust); }
+.log .lv { font-family: var(--f-mono); font-size: .8rem; }
+.log .lv.pos { color: var(--moss); } .log .lv.neg { color: var(--blood-hi); }
+.log button { padding: 2px 8px; border: none; color: var(--bone-dim); letter-spacing: 0; font-size: .95rem; }
+
+/* ---------- pricing ---------- */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.plan { border: 1px solid var(--rust); padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+.plan.pro { border-color: var(--blood); box-shadow: 0 0 60px var(--blood-glow); }
+.plan .pname { font-family: var(--f-goth); font-size: 2rem; line-height: 1; }
+.plan .price { font-family: var(--f-mono); font-size: 2.2rem; font-weight: 600; line-height: 1; }
+.plan .price small { font-size: .9rem; font-weight: 400; color: var(--bone-dim); }
+.plan ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: .95rem; }
+.plan li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; }
+.plan li::before { content: "†"; color: var(--blood-hi); font-family: var(--f-goth); }
+.plan li.no { color: var(--bone-dim); text-decoration: line-through; }
+.plan li.no::before { content: "×"; color: var(--bone-dim); }
+.plan .status { font-family: var(--f-mono); font-size: .8rem; color: var(--bone-dim); }
+
+/* ---------- modal / alarm ---------- */
+.overlay { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
+.dialog { background: var(--ash); border: 1px solid var(--blood); max-width: 460px; width: 100%; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.dialog h3 { font-family: var(--f-goth); font-size: 2.2rem; line-height: 1; }
+.dialog .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.alarm { background: #1a0403; border-color: var(--blood-hi); animation: throb 1s ease-in-out infinite; }
+.alarm h3 { color: var(--blood-hi); font-size: 3rem; }
+.alarm .what { font-size: 1.3rem; color: #fff; }
+@keyframes throb { 0%, 100% { box-shadow: 0 0 0 0 var(--blood-glow); } 50% { box-shadow: 0 0 80px 20px var(--blood-glow); } }
+
+/* ---------- epitaph ---------- */
+.epitaph { align-items: center; text-align: center; gap: 16px; }
+.epitaph blockquote { margin: 0; font-family: var(--f-goth); font-size: clamp(1.8rem, 5vw, 3rem); line-height: 1.08; max-width: 24ch; }
+.epitaph cite { font-style: italic; color: var(--bone-dim); }
+
+/* ---------- wasted ---------- */
+.wasted {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--blood); color: #fff; font-family: var(--f-mono); font-size: .78rem; letter-spacing: .04em; text-align: center;
+}
+.wasted b { font-weight: 600; }
+
+@media (max-width: 760px) {
+  .cert dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .cert dt { margin-top: 8px; }
+  .cert-foot { padding-right: 0; padding-bottom: 70px; }
+  .stamp { bottom: 22px; }
+  .tracker, .market { grid-template-columns: minmax(0, 1fr); }
+  .ware { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; }
+  .ware > span:first-child { grid-column: 1 / -1; }
+  .ware .wval { justify-self: start; }
+  .balance .n { font-size: 2.6rem; }
+  .addform { grid-template-columns: minmax(0, 1fr); }
+  body { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .label, .days.glitch, .alarm { animation: none; }
+}
+/* ---------- account & checkout ---------- */
+.btnlink { font-family: var(--f-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bone); border: 1px solid var(--rust); padding: 10px 16px; text-decoration: none; }
+.btnlink:hover { border-color: var(--blood-hi); color: #fff; }
+.who { font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); align-self: center; overflow-wrap: anywhere; }
+.dialog form { display: flex; flex-direction: column; gap: 14px; }
+.dialog .err { color: #ff8a80; font-size: .9rem; min-height: 1.2em; }
+.dialog .x { position: absolute; top: 10px; right: 10px; border: none; font-size: 1.2rem; padding: 6px 10px; letter-spacing: 0; }
+.dialog { position: relative; max-height: calc(100vh - 40px); overflow-y: auto; }
+.authtabs { display: flex; }
+.authtabs button { flex: 1; }
+.authtabs button + button { border-left: none; }
+.packs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.packs label { cursor: pointer; }
+.packs input { position: absolute; opacity: 0; pointer-events: none; }
+.packs span { display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--rust); padding: 10px 12px; font-family: var(--f-mono); font-size: .85rem; }
+.packs span b { font-size: 1.05rem; }
+.packs span small { color: var(--bone-dim); }
+.packs input:checked + span { border-color: var(--blood-hi); background: rgba(168, 18, 12, .18); }
+.packs input:focus-visible + span { outline: 2px solid var(--blood-hi); outline-offset: 2px; }
+.paymethods { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.paymethods button { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; padding: 14px 16px; text-transform: none; letter-spacing: .02em; font-size: .92rem; }
+.paymethods button small { color: var(--bone-dim); font-size: .75rem; }
+.paymethods button:disabled { opacity: .45; cursor: not-allowed; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(16px + env(safe-area-inset-top, 0px)); z-index: 90; background: var(--bone); color: var(--void); padding: 12px 18px; font-family: var(--f-mono); font-size: .85rem; max-width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.toast.bad { background: var(--blood-hi); color: #fff; }
+.footer { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); }
+.footer a { color: var(--bone-dim); }
+</style>
+</head>
+<body>
+
+<canvas id="grain" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="head-block">
+    <div class="planbar" id="planbar"><span id="planText">Đang tải gói...</span><button id="planBtn" type="button">Xem gói</button></div>
+    <header class="top">
+      <div class="brand">Đồng hồ <span>đời người</span></div>
+      <div class="top-actions">
+        <button id="heartBtn" type="button" aria-pressed="false">Nghe nhịp tim</button>
+        <button id="jumpTasks" type="button">Sổ việc</button>
+        <button id="jumpMarket" type="button">Mua giờ sống</button>
+        <button id="jumpForm" type="button">Khai hồ sơ</button>
+        <a id="adminLink" class="btnlink" href="/admin" hidden>Quản trị</a>
+        <span class="who" id="who" hidden></span>
+        <button id="acctBtn" type="button">Đăng nhập</button>
+      </div>
+    </header>
+  </div>
+
+  <section class="hero">
+    <p class="label">Thời gian còn lại của bạn</p>
+    <div class="days" id="bigDays">0</div>
+    <p class="days-unit">ngày. Rồi hết.</p>
+    <div class="clock" aria-label="Đếm ngược">
+      <div><b id="tY">0</b><span>năm</span></div>
+      <div><b id="tD">0</b><span>ngày</span></div>
+      <div><b id="tH">00</b><span>giờ</span></div>
+      <div><b id="tM">00</b><span>phút</span></div>
+      <div class="sec"><b id="tS">00</b><span>giây</span></div>
+    </div>
+    <p class="pulse-line">Tim bạn còn đập khoảng <b id="beats">0</b> lần nữa. Hôm nay chỉ còn <b id="todayLeft">0 giờ</b>.</p>
+  </section>
+
+  <section>
+    <p class="label">Văn bản số 01: dự báo</p>
+    <article class="cert" aria-label="Giấy báo tử dự kiến">
+      <div class="cert-inner">
+        <div class="cert-head">
+          <span class="gov">Sổ đăng ký những ngày còn lại</span>
+          <h3>Giấy Báo Tử</h3>
+          <span class="no">Số: <span id="certNo">000000</span>/DK</span>
+        </div>
+        <dl>
+          <dt>Người được dự báo</dt><dd>Bạn, người đang đọc dòng này</dd>
+          <dt>Ngày sinh</dt><dd id="cBirth">01/01/2000</dd>
+          <dt>Ngày mất dự kiến</dt><dd class="big" id="cDeath">...</dd>
+          <dt>Hưởng dương</dt><dd id="cAge">... tuổi</dd>
+          <dt>Nguyên nhân chính</dt><dd id="cCause">...</dd>
+          <dt>Đã sống được</dt><dd id="cLived">...</dd>
+        </dl>
+        <p class="cert-foot">Văn bản này không có giá trị pháp lý và có thể bị thay đổi bởi chính đương sự, bắt đầu từ hôm nay.</p>
+      </div>
+      <div class="stamp" id="stamp">Chưa<br>quá muộn</div>
+    </article>
+  </section>
+
+  <section id="tasksSec">
+    <p class="label">Văn bản số 02: sổ việc</p>
+    <h2>Việc phải xong, trước khi quá muộn</h2>
+    <p class="lede">Ghi việc và hạn chót. Đến hạn mà chưa xong, trang sẽ báo động. Trước hạn 10 phút, nó nhắc bạn một lần.</p>
+    <div class="tracker">
+      <div class="side" style="gap:14px">
+        <form class="addform" id="addForm" autocomplete="off">
+          <div class="field"><label for="newTitle">Việc cần làm</label><input class="line" id="newTitle" type="text" maxlength="140" placeholder="Ví dụ: gọi điện cho mẹ" required></div>
+          <div class="field"><label for="newDue">Hạn chót</label><input id="newDue" type="datetime-local"></div>
+          <button type="submit" class="btn-blood" id="addBtn">Ghi vào sổ</button>
+        </form>
+        <p class="limit" id="limitNote"></p>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tabOpen" aria-selected="true" aria-pressed="true">Chưa xong</button>
+          <button type="button" role="tab" id="tabDone" aria-selected="false" aria-pressed="false">Đã xong</button>
+        </div>
+        <ul class="tasklist" id="taskList"></ul>
+      </div>
+      <div class="side">
+        <div class="stat">
+          <span class="label">Hôm nay đã xong</span>
+          <div class="n mono" id="doneToday">0</div>
+          <p class="msg" id="doneMsg">Chưa có gì. Ngày vẫn đang trôi.</p>
+        </div>
+        <div class="stat">
+          <span class="label">Đang quá hạn</span>
+          <div class="n mono red" id="overdueN">0</div>
+        </div>
+        <div class="stat">
+          <span class="label">Chuỗi ngày không bỏ cuộc</span>
+          <div class="n mono" id="streak">0</div>
+          <p class="hint">Số ngày liên tiếp làm xong ít nhất một việc.</p>
+        </div>
+        <div class="field">
+          <span class="flabel">Nhắc nhở</span>
+          <button type="button" id="notifBtn">Bật thông báo trên máy</button>
+          <span class="hint" id="notifHint">Báo động trong trang luôn hoạt động khi trang đang mở.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="marketSec">
+    <p class="label">Văn bản số 03: chợ giờ sống</p>
+    <h2>Mua thêm giờ sống</h2>
+    <p class="lede">Không ai bán giờ sống bằng tiền. Ở đây bạn trả bằng mồ hôi. Mỗi lần làm một việc tốt cho cơ thể, bấm Mua và số giờ được cộng thẳng vào đồng hồ. Mỗi điếu thuốc, mỗi ly rượu thì ngược lại: bạn đang bán đi giờ sống của mình.</p>
+    <div class="market">
+      <div class="wares" id="wares"></div>
+      <div class="side">
+        <div class="balance">
+          <span class="label">Số dư giờ sống</span>
+          <div class="n mono" id="balTotal">0</div>
+          <p class="hint" id="balToday">Hôm nay: 0</p>
+        </div>
+        <div>
+          <span class="label">Giao dịch gần đây</span>
+          <ul class="log" id="buyLog"></ul>
+        </div>
+        <p class="note-box">Số giờ là mức trung bình rút ra từ các nghiên cứu lớn, áp dụng cho cả một quần thể, không phải lời hứa cho riêng ai. Mỗi mục có giới hạn trong ngày vì cơ thể không cộng dồn vô hạn.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="formSec">
+    <p class="label">Văn bản số 04: tờ khai</p>
+    <h2>Khai thật. Cái chết không nghe lời nói dối.</h2>
+    <p class="lede" id="sampleNote">Đang dùng hồ sơ mẫu (nam, sinh 01/01/2000). Sửa từng ô bên dưới, mọi con số trên trang sẽ đổi theo ngay. Dữ liệu chỉ nằm trong trình duyệt của bạn.</p>
+    <div class="form">
+      <div class="field"><label for="birth">Ngày sinh</label><input id="birth" type="date"></div>
+      <div class="field">
+        <span class="flabel" id="sexLbl">Giới tính</span>
+        <div class="seg" role="radiogroup" aria-labelledby="sexLbl">
+          <label><input type="radio" name="sex" id="sexM" value="m"><span>Nam</span></label>
+          <label><input type="radio" name="sex" id="sexF" value="f"><span>Nữ</span></label>
+        </div>
+      </div>
+      <div class="field"><label for="height">Chiều cao (cm)</label><input id="height" type="number" min="100" max="230" step="1"></div>
+      <div class="field"><label for="weight">Cân nặng (kg)</label><input id="weight" type="number" min="25" max="300" step="0.5"><span class="hint" id="bmiHint"></span></div>
+      <div class="field"><label for="exercise">Tập thể dục (phút / ngày)</label><input id="exercise" type="number" min="0" max="300" step="5"><span class="hint">Đi bộ nhanh trở lên. Đi lại trong nhà không tính.</span></div>
+      <div class="field"><label for="sitting">Ngồi không (giờ / ngày)</label><input id="sitting" type="number" min="0" max="20" step="0.5"><span class="hint">Ngồi học, ngồi máy tính, nằm lướt điện thoại.</span></div>
+      <div class="field"><label for="sleep">Ngủ (giờ / đêm)</label><input id="sleep" type="number" min="2" max="14" step="0.5"></div>
+      <div class="field">
+        <label for="smoke">Thuốc lá</label>
+        <select id="smoke">
+          <option value="never">Chưa bao giờ hút</option>
+          <option value="quit">Đã bỏ</option>
+          <option value="yes">Đang hút</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="alcohol">Rượu bia (ly / tuần)</label>
+        <select id="alcohol">
+          <option value="0">Không hoặc dưới 10 ly</option>
+          <option value="1">10 đến 20 ly</option>
+          <option value="2">20 đến 35 ly</option>
+          <option value="3">Trên 35 ly</option>
+        </select>
+        <span class="hint">1 ly = 1 lon bia hoặc 1 chén rượu nhỏ.</span>
+      </div>
+      <div class="field"><label for="phone">Lướt điện thoại (giờ / ngày)</label><input id="phone" type="number" min="0" max="20" step="0.5"></div>
+      <div class="field"><label for="parentAge">Bố mẹ bạn bao nhiêu tuổi</label><input id="parentAge" type="number" min="20" max="110" step="1"></div>
+      <div class="field"><label for="visits">Số lần gặp bố mẹ mỗi năm</label><input id="visits" type="number" min="0" max="365" step="1"></div>
+    </div>
+    <div class="field">
+      <span class="flabel">Bệnh đang mắc (chọn tất cả những gì đúng)</span>
+      <div class="ills" id="ills"></div>
+    </div>
+    <p class="note-box">Đây là ước tính thống kê từ các nghiên cứu dịch tễ lớn, không phải chẩn đoán. Hai người cùng hồ sơ vẫn có thể sống chênh nhau vài chục năm. Nếu bạn có bệnh, con số đúng nhất là con số bác sĩ của bạn nói.</p>
+  </section>
+
+  <section>
+    <p class="label">Văn bản số 05: biên bản tính toán</p>
+    <h2>Từng năm được cộng, từng năm bị lấy đi</h2>
+    <p class="lede">Bắt đầu từ tuổi thọ trung bình của người Việt cùng giới tính, rồi cộng trừ theo thói quen và bệnh của bạn. Nhiều bệnh cùng lúc không cộng dồn hết, vì chúng thường chồng lên nhau: bệnh nặng nhất tính đủ, các bệnh sau giảm dần.</p>
+    <div class="ledger-wrap">
+      <table>
+        <thead><tr><th>Yếu tố</th><th>Của bạn</th><th style="text-align:right">Năm</th><th>Căn cứ</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="label">Văn bản số 06: kiểm kê</p>
+    <h2>Bạn còn bao nhiêu lần nữa?</h2>
+    <div class="counts" id="counts"></div>
+  </section>
+
+  <section>
+    <p class="label">Văn bản số 07: sổ tuần</p>
+    <h2>Mỗi dấu gạch là một tuần đã chôn</h2>
+    <p class="lede">Mỗi hàng là một năm, mỗi ký hiệu là một tuần. Dấu × là tuần đã qua. Ô đỏ là tuần này. Dấu chấm là những tuần bạn vẫn còn, nếu dự báo đúng.</p>
+    <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
+    <div class="legend"><span>× đã qua: <b id="wPast">0</b></span><span class="red">■ tuần này</span><span>· còn lại: <b id="wLeft">0</b></span></div>
+  </section>
+
+  <section id="planSec">
+    <p class="label">Văn bản số 08: gia hạn</p>
+    <h2>Gia hạn kỷ luật, không gia hạn được tuổi thọ</h2>
+    <p class="lede">Tạo tài khoản là được dùng đầy đủ 3 ngày miễn phí. Sau đó chọn ở lại gói miễn phí, hoặc trả 24.000đ mỗi tháng, rẻ hơn một ly trà sữa. Thanh toán bằng mã QR ngân hàng hoặc thẻ Visa / Mastercard qua cổng thanh toán bên thứ ba. Trang này không bao giờ thấy số thẻ của bạn.</p>
+    <div class="plans">
+      <div class="plan">
+        <span class="pname">Miễn phí</span>
+        <span class="price">0đ <small>/ mãi mãi</small></span>
+        <ul>
+          <li>Đồng hồ đếm ngược và giấy báo tử</li>
+          <li>Tính tuổi thọ theo thói quen và bệnh</li>
+          <li>Sổ việc tối đa 3 việc chưa xong</li>
+          <li class="no">Báo động khi đến hạn chót</li>
+          <li class="no">Nhắc trước hạn 10 phút</li>
+          <li class="no">Không giới hạn số việc</li>
+        </ul>
+      </div>
+      <div class="plan pro">
+        <span class="pname">Người Sống</span>
+        <span class="price">24.000đ <small>/ tháng</small></span>
+        <ul>
+          <li>Tất cả của gói miễn phí</li>
+          <li>Không giới hạn số việc</li>
+          <li>Báo động khi đến hạn chót</li>
+          <li>Nhắc trước hạn 10 phút</li>
+          <li>Thông báo trên máy khi được cho phép</li>
+        </ul>
+        <span class="status" id="planStatus"></span>
+        <button type="button" class="btn-blood" id="subBtn">Mua gói Người Sống</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="epitaph">
+    <p class="label">Văn bia</p>
+    <blockquote id="quoteText"></blockquote>
+    <cite id="quoteBy"></cite>
+    <button id="nextQuote" type="button">Đọc bia khác</button>
+  </section>
+</div>
+
+<div class="overlay" id="payModal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <button type="button" class="x" id="payClose" aria-label="Đóng">×</button>
+    <h3 id="payTitle">Gói Người Sống</h3>
+    <p class="hint">Trả theo từng đợt, không tự động trừ tiền. Hết hạn thì gia hạn tiếp khi bạn muốn.</p>
+    <div class="packs" role="radiogroup" aria-label="Chọn số tháng" id="packs"></div>
+    <span class="flabel label">Chọn cách thanh toán</span>
+    <div class="paymethods">
+      <button type="button" id="payQr"><span>Quét mã QR<br><small>Mở app ngân hàng hoặc ví, quét mã là xong</small></span><span>→</span></button>
+      <button type="button" id="payCard"><span>Thẻ Visa / Mastercard<br><small>Nhập thẻ trên trang bảo mật của cổng thanh toán</small></span><span>→</span></button>
+    </div>
+    <p class="err" id="payErr" role="alert"></p>
+  </div>
+</div>
+
+<div class="overlay" id="authModal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button type="button" class="x" id="authClose" aria-label="Đóng">×</button>
+    <h3 id="authTitle">Tài khoản</h3>
+    <div class="authtabs">
+      <button type="button" id="tabReg" aria-pressed="true">Đăng ký</button>
+      <button type="button" id="tabLogin" aria-pressed="false">Đăng nhập</button>
+    </div>
+    <form id="authForm" novalidate>
+      <div class="field" id="nameField"><label for="authName">Tên gọi (không bắt buộc)</label><input class="line" id="authName" type="text" maxlength="60" autocomplete="nickname"></div>
+      <div class="field"><label for="authEmail">Email</label><input class="line" id="authEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="authPass">Mật khẩu (ít nhất 8 ký tự)</label><input class="line" id="authPass" type="password" minlength="8" autocomplete="new-password" required></div>
+      <p class="err" id="authErr" role="alert"></p>
+      <button type="submit" class="btn-blood" id="authSubmit">Tạo tài khoản, dùng thử 3 ngày</button>
+      <p class="hint" id="authNote">Những gì bạn đã nhập trên máy này sẽ được chuyển vào tài khoản mới.</p>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="overlay" id="alarm" hidden>
+  <div class="dialog alarm" role="alertdialog" aria-modal="true" aria-labelledby="alarmTitle">
+    <span class="label" id="alarmKind">Đã đến hạn</span>
+    <h3 id="alarmTitle">Hết giờ.</h3>
+    <p class="what" id="alarmWhat"></p>
+    <p id="alarmSub" class="hint"></p>
+    <div class="row">
+      <button type="button" class="btn-blood" id="alarmDone">Đã xong</button>
+      <button type="button" id="alarmSnooze">Cho tôi 10 phút</button>
+      <button type="button" id="alarmClose">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer" style="position:relative;z-index:2;margin-top:60px"><a href="/dieu-khoan">Điều khoản, bảo mật, hoàn tiền</a><span>© Đồng hồ đời người</span></footer>
+
+<div class="wasted">Bạn đã tiêu <b id="onPage">0 giây</b> trên trang này. Chúng sẽ không quay lại.</div>
+
+<script type="text/plain" id="appScript">
+(function () {
+  "use strict";
+  var DAY = 864e5, YEAR = 365.2425 * DAY, MIN = 6e4;
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n, d) { return Number(n).toLocaleString("vi-VN", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function load(k, f) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { return f; } }
+  var SRV = window.__SERVER || { user: null, pay: { qr: false, card: false }, price: 24000, packs: [1, 3, 6, 12] };
+  var SYNC_KEYS = { "dhdn-cfg2": 1, "dhdn-tasks": 1, "dhdn-bought": 1 };
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} if (SYNC_KEYS[k]) queueSync(); }
+  var syncTimer = null;
+  function syncBody() { return JSON.stringify({ cfg: load("dhdn-cfg2", {}), tasks: load("dhdn-tasks", []), bought: load("dhdn-bought", []) }); }
+  function queueSync() {
+    if (!SRV.user) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(pushSync, 1200);
+  }
+  function pushSync(keepalive) {
+    if (!SRV.user) return Promise.resolve();
+    clearTimeout(syncTimer); syncTimer = null;
+    return fetch("/api/data", { method: "PUT", headers: { "content-type": "application/json" }, body: syncBody(), credentials: "same-origin", keepalive: !!keepalive })
+      .then(function (r) { if (r.status === 401) { SRV.user = null; } })
+      .catch(function () { setTimeout(queueSync, 5000); });
+  }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && syncTimer) pushSync(true); });
+
+  // ================= THUẬT TOÁN TUỔI THỌ =================
+  var BASE = { m: 71.1, f: 76.3 }; // Tổng cục Thống kê VN, khoảng 2023
+  var ILLS = [
+    { id: "cvd", name: "Bệnh tim mạch hoặc từng đột quỵ", y: 7, src: "Emerging Risk Factors Collab., JAMA 2015" },
+    { id: "dep", name: "Trầm cảm, rối loạn lo âu kéo dài", y: 7, src: "Chesney et al., World Psychiatry 2014" },
+    { id: "dm", name: "Tiểu đường type 2", y: 6, src: "Emerging Risk Factors Collab., JAMA 2015" },
+    { id: "cancer", name: "Ung thư đang điều trị", y: 6, src: "Rất khác nhau theo loại; lấy mức trung bình thận trọng" },
+    { id: "ckd", name: "Bệnh thận mạn", y: 5, src: "Turin et al., JASN 2012" },
+    { id: "htn", name: "Tăng huyết áp", y: 5, src: "Franco et al., Hypertension 2005 (Framingham)" },
+    { id: "copd", name: "Bệnh phổi tắc nghẽn mạn tính, hen nặng", y: 4, src: "Shavelle et al., Int J COPD 2009" },
+    { id: "liver", name: "Viêm gan B/C mạn, xơ gan", y: 4, src: "Ước tính từ các nghiên cứu theo dõi viêm gan mạn" },
+    { id: "lipid", name: "Mỡ máu cao", y: 1.5, src: "Ước tính từ nguy cơ tim mạch tăng thêm" }
+  ];
+  var DIMINISH = [1, .75, .6, .5, .4, .35, .3, .3, .3];
+  function lerp(pts, x) {
+    if (x <= pts[0][0]) return pts[0][1];
+    for (var i = 1; i < pts.length; i++) if (x <= pts[i][0]) { var a = pts[i - 1], b = pts[i]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); }
+    return pts[pts.length - 1][1];
+  }
+  var EX_CURVE = [[0, 0], [75, 1.8], [150, 3.4], [300, 4.2], [450, 4.5]]; // Moore et al. 2012
+  var EX_REF = lerp(EX_CURVE, 60);
+  function sitPenalty(h) { return Math.min(3, Math.max(0, h - 3) * 0.33); } // Katzmarzyk & Lee 2012
+  var SIT_REF = sitPenalty(7);
+
+  function compute(c) {
+    var rows = [], base = BASE[c.sex] || BASE.m;
+    rows.push({ k: "Tuổi thọ trung bình người Việt (" + (c.sex === "f" ? "nữ" : "nam") + ")", v: "", y: base, src: "Tổng cục Thống kê Việt Nam", base: true });
+    rows.push({ k: "Tập thể dục", v: (Number(c.exercise) || 0) + " phút/ngày", y: lerp(EX_CURVE, (Number(c.exercise) || 0) * 7) - EX_REF, src: "Moore et al., PLoS Medicine 2012 (654.827 người)" });
+    var sit = Number(c.sitting) || 0;
+    rows.push({ k: "Ngồi không", v: sit + " giờ/ngày", y: SIT_REF - sitPenalty(sit), src: "Katzmarzyk & Lee, BMJ Open 2012" });
+    var bmi = bmiOf(c);
+    if (bmi) {
+      var by = bmi < 18.5 ? -1 : bmi < 25 ? 0 : bmi < 30 ? -0.5 : bmi < 35 ? -3 : bmi < 40 ? -5 : -9;
+      rows.push({ k: "Chỉ số BMI", v: fmt(bmi, 1), y: by, src: "Prospective Studies Collab., Lancet 2009" });
+    }
+    var sl = Number(c.sleep) || 0;
+    rows.push({ k: "Giấc ngủ", v: sl + " giờ/đêm", y: sl < 6 ? -1 : sl > 9 ? -0.5 : 0, src: "Cappuccio et al., Sleep 2010" });
+    rows.push({ k: "Thuốc lá", v: { never: "không hút", quit: "đã bỏ", yes: "đang hút" }[c.smoke], y: { never: 0, quit: -2, yes: -10 }[c.smoke] || 0, src: "Jha et al., NEJM 2013" });
+    var ai = Number(c.alcohol) || 0;
+    rows.push({ k: "Rượu bia", v: ["dưới 10 ly/tuần", "10–20 ly/tuần", "20–35 ly/tuần", "trên 35 ly/tuần"][ai], y: [0, -0.5, -1.5, -4.5][ai], src: "Wood et al., Lancet 2018" });
+    ILLS.filter(function (i) { return c.ills.indexOf(i.id) >= 0; }).sort(function (a, b) { return b.y - a.y; }).forEach(function (ill, i) {
+      var w = DIMINISH[i] || .3;
+      rows.push({ k: ill.name, v: w < 1 ? "tính " + Math.round(w * 100) + "% vì trùng lặp" : "đang mắc", y: -ill.y * w, src: ill.src });
+    });
+    var total = rows.reduce(function (s, r) { return s + r.y; }, 0);
+    var ageNow = (Date.now() - birthOf(c)) / YEAR, floored = false;
+    if (total < ageNow + 0.5) { total = ageNow + 0.5; floored = true; }
+    total = Math.min(total, 105);
+    var worst = rows.filter(function (r) { return !r.base && r.y < 0; }).sort(function (a, b) { return a.y - b.y; })[0];
+    return { rows: rows, total: total, floored: floored, ageNow: ageNow, cause: worst && worst.y <= -0.9 ? causeText(worst) : "Tuổi già. Nếu bạn may mắn." };
+  }
+  function causeText(r) {
+    var map = { "Thuốc lá": "Hậu quả của thuốc lá", "Rượu bia": "Hậu quả của rượu bia", "Ngồi không": "Ngồi một chỗ quá lâu, quá nhiều năm", "Tập thể dục": "Cơ thể không được vận động", "Chỉ số BMI": "Biến chứng của béo phì", "Giấc ngủ": "Thiếu ngủ kéo dài" };
+    return map[r.k] || "Biến chứng của " + r.k.toLowerCase();
+  }
+  function bmiOf(c) { var h = Number(c.height) / 100, w = Number(c.weight); return h > 0 && w > 0 ? w / (h * h) : 0; }
+  function birthOf(c) { var p = (c.birth || "2000-01-01").split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+
+  // ================= HỒ SƠ =================
+  var DEFAULTS = { birth: "", sex: "m", height: 168, weight: 62, exercise: 10, sitting: 9, sleep: 6.5, smoke: "never", alcohol: "1", phone: 5, parentAge: 50, visits: 6, ills: [] };
+  var cfg = Object.assign({}, DEFAULTS, load("dhdn-cfg2", {}));
+  var result, deathAt;
+  ["birth", "height", "weight", "exercise", "sitting", "sleep", "smoke", "alcohol", "phone", "parentAge", "visits"].forEach(function (f) {
+    var el = $(f); el.value = cfg[f];
+    el.addEventListener("input", function () { cfg[f] = el.value; commit(); });
+  });
+  $(cfg.sex === "f" ? "sexF" : "sexM").checked = true;
+  ["sexM", "sexF"].forEach(function (id) { $(id).addEventListener("change", function () { cfg.sex = $(id).value; commit(); }); });
+  $("ills").innerHTML = ILLS.map(function (i) {
+    return '<label class="ill"><input type="checkbox" id="ill-' + i.id + '"' + (cfg.ills.indexOf(i.id) >= 0 ? " checked" : "") +
+      '><span>' + i.name + '</span><span class="cost">−' + fmt(i.y, i.y % 1 ? 1 : 0) + ' năm</span></label>';
+  }).join("");
+  ILLS.forEach(function (i) {
+    $("ill-" + i.id).addEventListener("change", function (e) {
+      cfg.ills = cfg.ills.filter(function (x) { return x !== i.id; });
+      if (e.target.checked) cfg.ills.push(i.id);
+      commit();
+    });
+  });
+  function jump(id, focus) { $(id).scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); if (focus) $(focus).focus({ preventScroll: true }); }
+  $("jumpForm").addEventListener("click", function () { jump("formSec", "birth"); });
+  $("jumpTasks").addEventListener("click", function () { jump("tasksSec", "newTitle"); });
+  function commit() { save("dhdn-cfg2", cfg); recompute(); }
+
+  // ================= CHỢ GIỜ SỐNG =================
+  var WARES = [
+    { id: "run", name: "Chạy bộ 1 giờ", h: 7, cap: 2, src: "Lee et al., Progress in Cardiovascular Diseases 2017" },
+    { id: "walk", name: "Đi bộ nhanh 30 phút", h: 2.5, cap: 4, src: "Quy đổi từ Moore et al., PLoS Medicine 2012" },
+    { id: "stand", name: "Đứng dậy vận động thay vì ngồi 1 giờ", h: 22 / 60, cap: 8, src: "Veerman et al., Br J Sports Med 2012" },
+    { id: "smoke", name: "Hút 1 điếu thuốc", h: -20 / 60, cap: 60, src: "Jackson et al., UCL, Addiction 2025", sell: true },
+    { id: "drink", name: "Uống 1 ly rượu bia vượt mức khuyến cáo", h: -15 / 60, cap: 30, src: "Spiegelhalter, dựa trên Wood et al., Lancet 2018", sell: true },
+    { id: "screen", name: "Ngồi xem màn hình thêm 1 giờ", h: -22 / 60, cap: 16, src: "Veerman et al., Br J Sports Med 2012", sell: true }
+  ];
+  var bought = load("dhdn-bought", []);
+  function boughtHours() { return bought.reduce(function (s, e) { return s + e.h; }, 0); }
+  function hstr(h) {
+    var sign = h > 0 ? "+" : h < 0 ? "−" : "", a = Math.abs(h), H = Math.floor(a), M = Math.round((a - H) * 60);
+    if (M === 60) { H++; M = 0; }
+    return sign + (H ? H + " giờ" : "") + (H && M ? " " : "") + (M || !H ? M + " phút" : "");
+  }
+  function todayCount(id) { var sod = new Date(); sod.setHours(0, 0, 0, 0); return bought.filter(function (e) { return e.id === id && e.at >= sod.getTime(); }).length; }
+  function renderMarket() {
+    var html = "", group = "";
+    WARES.forEach(function (w) {
+      var g = w.sell ? "Bán đi giờ sống" : "Mua thêm giờ sống";
+      if (g !== group) { group = g; html += '<div class="ware-group">' + g + "</div>"; }
+      var n = todayCount(w.id), full = n >= w.cap;
+      html += '<div class="ware' + (w.sell ? " sell" : "") + '"><span><span class="wname">' + w.name + '</span><span class="wsrc">' + w.src +
+        '</span><span class="wcount">Hôm nay: ' + n + "/" + w.cap + (full ? " · đủ cho hôm nay" : "") + '</span></span><span class="wval">' + hstr(w.h) +
+        '</span><button type="button" data-ware="' + w.id + '"' + (full ? " disabled" : "") + ">" + (w.sell ? "Đã lỡ" : "Mua") + "</button></div>";
+    });
+    $("wares").innerHTML = html;
+    var tot = boughtHours(), sod = new Date(); sod.setHours(0, 0, 0, 0);
+    var today = bought.filter(function (e) { return e.at >= sod.getTime(); }).reduce(function (s, e) { return s + e.h; }, 0);
+    var bt = $("balTotal"); bt.textContent = hstr(tot); bt.className = "n mono " + (tot > 0 ? "pos" : tot < 0 ? "neg" : "");
+    $("balToday").textContent = "Hôm nay: " + hstr(today);
+    var recent = bought.slice(-6).reverse();
+    $("buyLog").innerHTML = recent.length ? recent.map(function (e) {
+      var w = WARES.find(function (x) { return x.id === e.id; }) || { name: e.id }, d = new Date(e.at);
+      return '<li><span>' + w.name + ' <span class="hint">' + pad(d.getHours()) + ":" + pad(d.getMinutes()) + '</span></span><span class="lv ' + (e.h > 0 ? "pos" : "neg") + '">' + hstr(e.h) +
+        '</span><button type="button" data-undo="' + e.at + '" aria-label="Hoàn tác">↺</button></li>';
+    }).join("") : '<li><span class="hint">Chưa có giao dịch nào.</span></li>';
+  }
+  $("wares").addEventListener("click", function (e) {
+    var id = e.target.dataset && e.target.dataset.ware; if (!id) return;
+    var w = WARES.find(function (x) { return x.id === id; });
+    if (!w || todayCount(id) >= w.cap) return;
+    bought.push({ id: id, h: w.h, at: Date.now() }); save("dhdn-bought", bought);
+    renderMarket(); recompute();
+  });
+  $("buyLog").addEventListener("click", function (e) {
+    var at = e.target.dataset && e.target.dataset.undo; if (!at) return;
+    bought = bought.filter(function (x) { return String(x.at) !== at; }); save("dhdn-bought", bought);
+    renderMarket(); recompute();
+  });
+  $("jumpMarket").addEventListener("click", function () { jump("marketSec"); });
+
+  function recompute() {
+    result = compute(cfg);
+    var bh = boughtHours();
+    if (bought.length) {
+      var extraY = bh / (365.2425 * 24);
+      result.rows.push({ k: "Chợ giờ sống", v: hstr(bh), y: extraY, src: "Tổng các lần mua và bán trong Chợ giờ sống" });
+      result.total = Math.min(105, Math.max(result.ageNow + 1 / 365, result.total + extraY));
+    }
+    var b = birthOf(cfg);
+    deathAt = new Date(b.getTime() + result.total * YEAR);
+    $("sampleNote").hidden = !!cfg.birth;
+    var bmi = bmiOf(cfg);
+    $("bmiHint").textContent = bmi ? "BMI " + fmt(bmi, 1) + (bmi < 18.5 ? ", thiếu cân" : bmi < 25 ? ", bình thường" : bmi < 30 ? ", thừa cân" : ", béo phì") : "";
+    renderCert(b); renderLedger(); renderCounts(); drawWeeks(); tick();
+  }
+  var WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+  function dstr(d) { return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+  function renderCert(b) {
+    $("cBirth").textContent = dstr(b);
+    $("cDeath").textContent = WEEKDAYS[deathAt.getDay()] + ", " + dstr(deathAt);
+    $("cAge").textContent = fmt(result.total, 1) + " tuổi";
+    $("cCause").textContent = result.cause;
+    var lived = Math.max(0, result.ageNow / result.total);
+    $("cLived").textContent = fmt(lived * 100, 1) + "% quãng đời";
+    $("certNo").textContent = String(Math.abs(Math.floor((b.getTime() / DAY) * 7919 + result.total * 1000) % 1000000)).padStart(6, "0");
+    $("stamp").innerHTML = result.floored ? "Đang sống<br>trên thời gian vay" : lived > .75 ? "Thời gian<br>sắp cạn" : "Chưa<br>quá muộn";
+  }
+  function renderLedger() {
+    $("ledger").innerHTML = result.rows.map(function (r) {
+      var cls = r.base ? "" : r.y < -0.05 ? "neg" : r.y > 0.05 ? "pos" : "";
+      var y = r.base ? fmt(r.y, 1) : (r.y > 0.05 ? "+" : r.y < -0.05 ? "−" : "±") + fmt(Math.abs(r.y), 1);
+      return "<tr><td>" + r.k + "</td><td class=\"mono\">" + (r.v || "") + "</td><td class=\"yrs " + cls + "\">" + y + "</td><td class=\"src\">" + r.src + "</td></tr>";
+    }).join("") + "<tr class=\"total\"><td colspan=\"2\">Tuổi thọ dự báo" + (result.floored ? " (bạn đã sống vượt con số tính được)" : "") + "</td><td class=\"yrs\">" + fmt(result.total, 1) + "</td><td></td></tr>";
+  }
+
+  // ================= ĐỒNG HỒ =================
+  var lastSec = -1, lastDay = 0;
+  function tick() {
+    if (!deathAt) return;
+    var now = new Date(), left = Math.max(0, deathAt - now);
+    var y = 0, cur = new Date(now);
+    while (true) { var nx = new Date(cur); nx.setFullYear(nx.getFullYear() + 1); if (nx <= deathAt) { cur = nx; y++; } else break; }
+    var rest = Math.max(0, deathAt - cur);
+    $("bigDays").textContent = fmt(Math.floor(left / DAY));
+    $("tY").textContent = y;
+    $("tD").textContent = Math.floor(rest / DAY);
+    $("tH").textContent = pad(Math.floor(rest % DAY / 36e5));
+    $("tM").textContent = pad(Math.floor(rest % 36e5 / MIN));
+    $("tS").textContent = pad(Math.floor(rest % MIN / 1e3));
+    $("beats").textContent = fmt(left / MIN * 72);
+    var sod = new Date(now); sod.setHours(0, 0, 0, 0);
+    var endDay = sod.getTime() + DAY - now;
+    $("todayLeft").textContent = Math.floor(endDay / 36e5) + " giờ " + Math.floor(endDay % 36e5 / MIN) + " phút";
+    if (sod.getTime() !== lastDay) { lastDay = sod.getTime(); renderTasks(); }
+    var s = now.getSeconds();
+    if (s !== lastSec) {
+      lastSec = s;
+      if (!reduce && Math.random() < 0.04) { var el = $("bigDays"); el.classList.remove("glitch"); void el.offsetWidth; el.classList.add("glitch"); }
+      if (heartOn) beat();
+      if (s % 15 === 0) renderTasks(); // cập nhật nhãn "còn X phút"
+      checkReminders(now.getTime());
+      renderPlan();
+    }
+  }
+
+  // ================= KIỂM KÊ =================
+  function renderCounts() {
+    var yearsLeft = Math.max(0, (deathAt - Date.now()) / YEAR), daysLeft = yearsLeft * 365.2425;
+    var phone = Number(cfg.phone) || 0, sleep = Number(cfg.sleep) || 0, sit = Number(cfg.sitting) || 0;
+    var parentLife = BASE.f - 1.5;
+    var parentYears = Math.min(yearsLeft, Math.max(0, parentLife - (Number(cfg.parentAge) || 0)));
+    var items = [
+      { n: Math.floor(yearsLeft), what: "cái Tết", why: "Năm ngoái bạn đã dùng cái Tết của mình vào việc gì?" },
+      { n: parentYears * (Number(cfg.visits) || 0), what: "lần gặp bố mẹ", why: "Nếu bố mẹ sống đến khoảng " + Math.round(parentLife) + " tuổi và bạn về " + (cfg.visits || 0) + " lần mỗi năm.", alert: true },
+      { n: Math.floor(daysLeft / 7), what: "ngày thứ Bảy", why: "Mỗi thứ Bảy nằm ườn trên giường là một số bị gạch khỏi đây." },
+      { n: yearsLeft * 12.37, what: "đêm trăng rằm", why: "Lần cuối bạn ngẩng đầu nhìn trăng là khi nào?" },
+      { n: daysLeft * phone / 365.2425 / 24, what: "năm nhìn màn hình", why: "Tính liền 24/24, nếu cứ lướt " + phone + " giờ mỗi ngày.", alert: true, d: 1 },
+      { n: daysLeft * sit / 365.2425 / 24, what: "năm ngồi một chỗ", why: "Phần đời còn lại bạn sẽ dành cho cái ghế.", alert: true, d: 1 },
+      { n: daysLeft * sleep / 365.2425 / 24, what: "năm ngủ", why: "Cái này thì cần. Nhưng nó cũng là thời gian.", d: 1 },
+      { n: yearsLeft * 12, what: "cuốn sách", why: "Nếu từ hôm nay bạn đọc mỗi tháng một cuốn." }
+    ];
+    $("counts").innerHTML = items.map(function (it) {
+      return '<div class="count' + (it.alert ? " alert" : "") + '"><span class="n">' + fmt(it.n, it.d) + '</span><span class="what">' + it.what + '</span><span class="why">' + it.why + "</span></div>";
+    }).join("");
+  }
+
+  // ================= SỔ TUẦN =================
+  var canvas = $("weeks"), ctx = canvas.getContext("2d"), phase = 0;
+  function drawWeeks() {
+    if (!result) return;
+    var cs = getComputedStyle(document.documentElement);
+    var bone = cs.getPropertyValue("--bone-dim").trim(), blood = cs.getPropertyValue("--blood-hi").trim(), faint = cs.getPropertyValue("--rust").trim();
+    var years = Math.ceil(result.total), cols = 52, labelW = 24;
+    var w = canvas.clientWidth || 600, cell = Math.min(13, Math.max(4, (w - labelW) / cols));
+    var h = Math.ceil(years * cell), dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    var lived = Math.floor((Date.now() - birthOf(cfg)) / (7 * DAY)), total = Math.floor(result.total * 52.1775);
+    ctx.font = "9px 'IBM Plex Mono', monospace"; ctx.textBaseline = "middle"; ctx.lineWidth = Math.max(1, cell / 9);
+    for (var y = 0; y < years; y++) {
+      if (y % 10 === 0) { ctx.fillStyle = bone; ctx.fillText(String(y), 0, y * cell + cell / 2); }
+      for (var x = 0; x < cols; x++) {
+        var i = y * cols + x; if (i >= total) break;
+        var cx = labelW + x * cell + cell / 2, cy = y * cell + cell / 2, r = cell * 0.3;
+        if (i < lived) {
+          ctx.strokeStyle = bone; ctx.globalAlpha = .75; ctx.beginPath();
+          ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r); ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r); ctx.stroke();
+        } else if (i === lived) {
+          ctx.globalAlpha = .5 + .5 * Math.abs(Math.sin(phase)); ctx.fillStyle = blood; ctx.fillRect(cx - cell * .42, cy - cell * .42, cell * .84, cell * .84);
+        } else {
+          ctx.globalAlpha = 1; ctx.fillStyle = faint; ctx.beginPath(); ctx.arc(cx, cy, Math.max(.9, cell * .13), 0, 7); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+    $("wPast").textContent = fmt(Math.min(lived, total));
+    $("wLeft").textContent = fmt(Math.max(0, total - lived - 1));
+  }
+  if (!reduce) setInterval(function () { phase += .3; drawWeeks(); }, 140);
+  window.addEventListener("resize", function () { drawWeeks(); sizeGrain(); });
+
+  // ================= GÓI THUÊ BAO =================
+  // Trạng thái gói do máy chủ quyết định (thời gian dùng thử, ngày hết hạn).
+  var FREE_LIMIT = 3, plan = { server: true };
+  var skew = SRV.now ? SRV.now - Date.now() : 0;
+  function planState() {
+    var u = SRV.user;
+    if (!u) return { kind: "guest", left: 0 };
+    var now = Date.now() + skew;
+    if (u.paidUntil > now) return { kind: "paid", left: u.paidUntil - now };
+    if (u.trialEnds > now) return { kind: "trial", left: u.trialEnds - now };
+    return { kind: "free", left: 0 };
+  }
+  function isPro() { var k = planState().kind; return k === "trial" || k === "paid"; }
+  function dur(ms) { var d = Math.floor(ms / DAY), h = Math.floor(ms % DAY / 36e5), m = Math.floor(ms % 36e5 / MIN); return d > 0 ? d + " ngày " + h + " giờ" : h + " giờ " + m + " phút"; }
+  var lastPlanKind = "";
+  function renderPlan() {
+    if (!plan) return;
+    var st = planState();
+    var bar = $("planbar");
+    bar.classList.toggle("expired", st.kind === "free");
+    if (st.kind === "trial") {
+      $("planText").innerHTML = "Dùng thử miễn phí: còn <b>" + dur(st.left) + "</b>";
+      $("planBtn").textContent = "Đăng ký 24.000đ/tháng";
+      $("planStatus").textContent = "Bạn đang dùng thử. Còn " + dur(st.left) + ".";
+    } else if (st.kind === "paid") {
+      $("planText").innerHTML = "Gói Người Sống: còn <b>" + dur(st.left) + "</b>" + (st.left < 3 * DAY ? ". Sắp hết hạn, gia hạn để không mất báo động." : "");
+      $("planBtn").textContent = st.left < 3 * DAY ? "Gia hạn" : "Xem gói";
+      $("planStatus").textContent = "Đang hoạt động đến " + dstr(new Date(Date.now() + st.left)) + ".";
+    } else if (st.kind === "guest") {
+      $("planText").innerHTML = "Bạn đang dùng thử không cần tài khoản. <b>Tạo tài khoản</b> để được 3 ngày dùng đủ tính năng và giữ dữ liệu trên mọi máy.";
+      $("planBtn").textContent = "Tạo tài khoản";
+      $("planStatus").textContent = "Tạo tài khoản để bắt đầu 3 ngày dùng thử.";
+    } else {
+      $("planText").innerHTML = "<b>Hết 3 ngày dùng thử.</b> Báo động hạn chót đã tắt, sổ việc giới hạn " + FREE_LIMIT + " việc.";
+      $("planBtn").textContent = "Gia hạn 24.000đ/tháng";
+      $("planStatus").textContent = "Hết thời gian dùng thử.";
+    }
+    if (st.kind !== lastPlanKind) { lastPlanKind = st.kind; renderTasks(); }
+  }
+  function openPay() {
+    if (!SRV.user) { openAuth("reg", "Tạo tài khoản trước, rồi chọn gói."); return; }
+    $("payErr").textContent = "";
+    $("payQr").disabled = !SRV.pay.qr; $("payCard").disabled = !SRV.pay.card;
+    if (!SRV.pay.qr && !SRV.pay.card) $("payErr").textContent = "Cổng thanh toán đang được bảo trì. Thử lại sau.";
+    $("payModal").hidden = false;
+    var first = $("packs").querySelector("input:checked"); if (first) first.focus();
+  }
+  $("planBtn").addEventListener("click", function () {
+    var k = planState().kind;
+    if (k === "guest") openAuth("reg");
+    else if (k === "paid" && planState().left >= 3 * DAY) jump("planSec");
+    else openPay();
+  });
+  $("subBtn").addEventListener("click", openPay);
+  $("payClose").addEventListener("click", function () { $("payModal").hidden = true; });
+  $("packs").innerHTML = (SRV.packs || [1, 3, 6, 12]).map(function (m, i) {
+    return '<label><input type="radio" name="pack" id="pack-' + m + '" value="' + m + '"' + (i === 0 ? " checked" : "") + '><span><b>' + m + ' tháng</b><small>' + fmt(SRV.price * m) + 'đ</small></span></label>';
+  }).join("");
+  function startPay(method) {
+    var m = Number(($("packs").querySelector("input:checked") || {}).value || 1);
+    $("payErr").textContent = "Đang mở cổng thanh toán...";
+    $("payQr").disabled = $("payCard").disabled = true;
+    pushSync().then(function () {
+      return fetch("/api/pay/create", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ months: m, method: method }) });
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        if (x.ok && x.j.url) { window.location.href = x.j.url; return; }
+        $("payErr").textContent = (x.j && x.j.error) || "Không mở được cổng thanh toán.";
+        $("payQr").disabled = !SRV.pay.qr; $("payCard").disabled = !SRV.pay.card;
+      })
+      .catch(function () { $("payErr").textContent = "Mất kết nối. Kiểm tra mạng rồi thử lại."; $("payQr").disabled = !SRV.pay.qr; $("payCard").disabled = !SRV.pay.card; });
+  }
+  $("payQr").addEventListener("click", function () { startPay("qr"); });
+  $("payCard").addEventListener("click", function () { startPay("card"); });
+
+  // ================= SỔ VIỆC =================
+  var tasks = load("dhdn-tasks", null);
+  if (!tasks) {
+    var t0 = Date.now();
+    tasks = [
+      { id: "s1", t: "Ví dụ: gọi điện cho mẹ", due: t0 + 2 * 36e5, done: false, created: t0 },
+      { id: "s2", t: "Ví dụ: làm 30 phút bài tập đang trốn", due: t0 - 20 * MIN, done: false, created: t0, fired: true, warned: true },
+      { id: "s3", t: "Ví dụ: đi bộ 20 phút, để điện thoại ở nhà", due: 0, done: true, doneAt: t0, created: t0 }
+    ];
+    save("dhdn-tasks", tasks);
+  }
+  var view = "open";
+  function persistTasks() { save("dhdn-tasks", tasks); renderTasks(); }
+  function openTasks() { return tasks.filter(function (t) { return !t.done; }); }
+  function dueLabel(t, now) {
+    if (!t.due) return "Không hạn chót";
+    var diff = t.due - now, d = new Date(t.due);
+    var when = pad(d.getHours()) + ":" + pad(d.getMinutes()) + " · " + dstr(d);
+    if (t.done) return "Xong lúc " + (t.doneAt ? pad(new Date(t.doneAt).getHours()) + ":" + pad(new Date(t.doneAt).getMinutes()) + " · " + dstr(new Date(t.doneAt)) : "");
+    if (diff < 0) return "QUÁ HẠN " + dur(-diff) + " · hạn " + when;
+    return "Còn " + dur(diff) + " · hạn " + when;
+  }
+  function renderTasks() {
+    if (!tasks || !plan) return;
+    var now = Date.now();
+    var list = tasks.filter(function (t) { return view === "open" ? !t.done : t.done; });
+    list.sort(view === "open"
+      ? function (a, b) { return (a.due || 9e15) - (b.due || 9e15); }
+      : function (a, b) { return (b.doneAt || 0) - (a.doneAt || 0); });
+    var ul = $("taskList");
+    if (!list.length) {
+      ul.innerHTML = '<li class="empty">' + (view === "open" ? "Không còn việc nào. Hoặc bạn đã làm hết, hoặc bạn chưa dám viết ra." : "Chưa xong việc nào.") + "</li>";
+    } else {
+      ul.innerHTML = list.map(function (t) {
+        var cls = t.done ? "done" : t.due && t.due < now ? "overdue" : t.due && t.due - now < 36e5 ? "soon" : "";
+        return '<li class="task ' + cls + '" data-id="' + esc(t.id) + '">' +
+          '<input type="checkbox" id="task-' + esc(t.id) + '" aria-label="Đánh dấu xong"' + (t.done ? " checked" : "") + ">" +
+          '<label for="task-' + esc(t.id) + '"><span class="t-title">' + esc(t.t) + '</span><span class="t-due">' + dueLabel(t, now) + "</span></label>" +
+          '<button type="button" class="del" aria-label="Xóa việc">×</button></li>';
+      }).join("");
+    }
+    var open = openTasks();
+    var pro = isPro();
+    var lim = $("limitNote");
+    if (pro) { lim.textContent = "Không giới hạn số việc. Báo động hạn chót đang bật."; lim.classList.remove("hit"); }
+    else {
+      lim.textContent = "Gói miễn phí: " + open.length + "/" + FREE_LIMIT + " việc chưa xong. Báo động hạn chót đã tắt.";
+      lim.classList.toggle("hit", open.length >= FREE_LIMIT);
+    }
+    $("addBtn").disabled = !pro && open.length >= FREE_LIMIT;
+    var sod = new Date(); sod.setHours(0, 0, 0, 0);
+    var doneToday = tasks.filter(function (t) { return t.done && t.doneAt >= sod.getTime(); }).length;
+    $("doneToday").textContent = doneToday;
+    $("doneMsg").textContent = doneToday === 0 ? "Chưa có gì. Ngày vẫn đang trôi." : doneToday < 3 ? "Có còn hơn không. Làm thêm một việc nữa." : "Hôm nay bạn đã thật sự sống.";
+    $("overdueN").textContent = open.filter(function (t) { return t.due && t.due < now; }).length;
+    var streak = 0, d = new Date(sod);
+    var doneDays = {};
+    tasks.forEach(function (t) { if (t.done && t.doneAt) { var x = new Date(t.doneAt); x.setHours(0, 0, 0, 0); doneDays[x.getTime()] = 1; } });
+    if (!doneDays[d.getTime()]) d.setDate(d.getDate() - 1);
+    while (doneDays[d.getTime()]) { streak++; d.setDate(d.getDate() - 1); }
+    $("streak").textContent = streak;
+  }
+  $("taskList").addEventListener("change", function (e) {
+    var li = e.target.closest(".task"); if (!li) return;
+    var t = tasks.find(function (x) { return x.id === li.dataset.id; }); if (!t) return;
+    t.done = e.target.checked; t.doneAt = t.done ? Date.now() : 0;
+    persistTasks();
+  });
+  $("taskList").addEventListener("click", function (e) {
+    if (!e.target.classList.contains("del")) return;
+    var id = e.target.closest(".task").dataset.id;
+    tasks = tasks.filter(function (x) { return x.id !== id; });
+    persistTasks();
+  });
+  $("addForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = $("newTitle").value.trim(); if (!title) return;
+    if (!isPro() && openTasks().length >= FREE_LIMIT) { openPay(); return; }
+    var dueVal = $("newDue").value, due = 0;
+    if (dueVal) { var p = dueVal.split(/[-T:]/).map(Number); due = new Date(p[0], p[1] - 1, p[2], p[3], p[4]).getTime(); }
+    tasks.push({ id: "t" + Date.now().toString(36), t: title, due: due, done: false, created: Date.now() });
+    $("newTitle").value = ""; $("newDue").value = "";
+    view = "open"; setTab(); persistTasks();
+  });
+  function setTab() {
+    $("tabOpen").setAttribute("aria-selected", String(view === "open")); $("tabOpen").setAttribute("aria-pressed", String(view === "open"));
+    $("tabDone").setAttribute("aria-selected", String(view === "done")); $("tabDone").setAttribute("aria-pressed", String(view === "done"));
+  }
+  $("tabOpen").addEventListener("click", function () { view = "open"; setTab(); renderTasks(); });
+  $("tabDone").addEventListener("click", function () { view = "done"; setTab(); renderTasks(); });
+
+  // ---- nhắc nhở ----
+  var alarmId = null;
+  function checkReminders(now) {
+    if (!tasks || !plan || !isPro() || !$("alarm").hidden) return;
+    for (var i = 0; i < tasks.length; i++) {
+      var t = tasks[i];
+      if (t.done || !t.due) continue;
+      if (t.due <= now && !t.fired) { t.fired = true; t.warned = true; save("dhdn-tasks", tasks); fireAlarm(t, true); return; }
+      if (t.due - now <= 10 * MIN && t.due > now && !t.warned) { t.warned = true; save("dhdn-tasks", tasks); fireAlarm(t, false); return; }
+    }
+  }
+  function fireAlarm(t, overdue) {
+    alarmId = t.id;
+    $("alarmKind").textContent = overdue ? "Đã đến hạn" : "Còn 10 phút";
+    $("alarmTitle").textContent = overdue ? "Hết giờ." : "Sắp hết giờ.";
+    $("alarmWhat").textContent = t.t;
+    $("alarmSub").textContent = overdue ? "Một phút trì hoãn nữa là một phút bạn không bao giờ lấy lại." : "Bắt đầu ngay bây giờ thì vẫn kịp.";
+    $("alarm").hidden = false; $("alarmDone").focus();
+    renderTasks();
+    if (actx) { var tt = actx.currentTime + .02; for (var k = 0; k < 4; k++) { thump(tt + k * .5, 62, .9); thump(tt + k * .5 + .22, 52, .55); } }
+    try {
+      if ("Notification" in window && Notification.permission === "granted") new Notification(overdue ? "Hết giờ: " + t.t : "Còn 10 phút: " + t.t, { body: "Đồng hồ đời người" });
+    } catch (e) {}
+  }
+  function closeAlarm() { $("alarm").hidden = true; alarmId = null; }
+  $("alarmDone").addEventListener("click", function () {
+    var t = tasks.find(function (x) { return x.id === alarmId; });
+    if (t) { t.done = true; t.doneAt = Date.now(); }
+    closeAlarm(); persistTasks();
+  });
+  $("alarmSnooze").addEventListener("click", function () {
+    var t = tasks.find(function (x) { return x.id === alarmId; });
+    if (t) { t.due = Date.now() + 10 * MIN; t.fired = false; t.warned = true; }
+    closeAlarm(); persistTasks();
+  });
+  $("alarmClose").addEventListener("click", closeAlarm);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { $("payModal").hidden = true; $("authModal").hidden = true; closeAlarm(); } });
+
+  $("notifBtn").addEventListener("click", function () {
+    var hint = $("notifHint");
+    if (!isPro()) { hint.textContent = "Thông báo thuộc gói Người Sống."; openPay(); return; }
+    if (!("Notification" in window)) { hint.textContent = "Trình duyệt này không hỗ trợ thông báo. Báo động trong trang vẫn hoạt động."; return; }
+    try {
+      Promise.resolve(Notification.requestPermission()).then(function (p) {
+        hint.textContent = p === "granted" ? "Đã bật. Máy sẽ báo khi đến hạn, miễn là trang còn mở." : "Không được cấp quyền ở đây. Mở bản index.html trong trình duyệt để bật. Báo động trong trang vẫn hoạt động.";
+      }).catch(function () { hint.textContent = "Không được cấp quyền ở đây. Báo động trong trang vẫn hoạt động."; });
+    } catch (e) { hint.textContent = "Không được cấp quyền ở đây. Báo động trong trang vẫn hoạt động."; }
+  });
+
+  // ================= VĂN BIA =================
+  var Q = [
+    ["Không phải ta có quá ít thời gian, mà là ta lãng phí quá nhiều.", "Seneca, Về sự ngắn ngủi của đời người"],
+    ["Nếu hôm nay là ngày cuối cùng của đời tôi, tôi có muốn làm điều tôi sắp làm hôm nay không?", "Steve Jobs, Stanford, 2005"],
+    ["Đừng sống như thể bạn còn cả vạn năm. Cái chết đang lơ lửng trên đầu bạn.", "Marcus Aurelius, Suy tưởng"],
+    ["Thời gian thấm thoắt thoi đưa, nó đi đi mãi có chờ đợi ai.", "Ca dao Việt Nam"],
+    ["Ở đây yên nghỉ một người đã định bắt đầu từ ngày mai.", "Văn bia không ai muốn có"],
+    ["Ngày mai là cái cớ đẹp nhất mà sự lười biếng từng nghĩ ra.", "Đồng hồ đời người"]
+  ];
+  var qi = Math.floor(Math.random() * Q.length);
+  function showQ() { $("quoteText").textContent = "“" + Q[qi][0] + "”"; $("quoteBy").textContent = Q[qi][1]; }
+  $("nextQuote").addEventListener("click", function () { qi = (qi + 1) % Q.length; showQ(); });
+
+  // ================= KHÔNG KHÍ =================
+  var grain = $("grain"), gctx = grain.getContext("2d"), gImg;
+  function sizeGrain() { grain.width = Math.ceil(innerWidth / 3); grain.height = Math.ceil(innerHeight / 3); gImg = gctx.createImageData(grain.width, grain.height); }
+  function paintGrain() { var d = gImg.data; for (var i = 0; i < d.length; i += 4) { var v = Math.random() * 255 | 0; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } gctx.putImageData(gImg, 0, 0); }
+  sizeGrain(); paintGrain();
+  if (!reduce) setInterval(paintGrain, 90);
+
+  var heartOn = false, actx;
+  $("heartBtn").addEventListener("click", function () {
+    heartOn = !heartOn;
+    this.setAttribute("aria-pressed", String(heartOn));
+    this.textContent = heartOn ? "Tắt nhịp tim" : "Nghe nhịp tim";
+    if (heartOn) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch (e) { heartOn = false; } }
+  });
+  function thump(t, f, g) {
+    var o = actx.createOscillator(), v = actx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .55, t + .14);
+    v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(g, t + .015); v.gain.exponentialRampToValueAtTime(0.0001, t + .2);
+    o.connect(v).connect(actx.destination); o.start(t); o.stop(t + .25);
+  }
+  function beat() { if (!actx) return; var t = actx.currentTime + .02; thump(t, 62, .9); thump(t + .22, 52, .55); }
+
+  var opened = Date.now();
+  function onPage() { var s = Math.floor((Date.now() - opened) / 1000); $("onPage").textContent = s < 60 ? s + " giây" : Math.floor(s / 60) + " phút " + (s % 60) + " giây"; }
+
+  renderMarket(); recompute(); renderPlan(); renderTasks(); showQ(); onPage();
+  setInterval(function () { tick(); onPage(); }, 250);
+  setInterval(function () { renderCounts(); renderMarket(); }, 60000);
+  // ================= TÀI KHOẢN =================
+  var authMode = "reg";
+  function toast(msg, bad) {
+    var t = $("toast"); t.textContent = msg; t.classList.toggle("bad", !!bad); t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 6000);
+  }
+  function setAuthMode(m) {
+    authMode = m;
+    $("tabReg").setAttribute("aria-pressed", String(m === "reg"));
+    $("tabLogin").setAttribute("aria-pressed", String(m === "login"));
+    $("nameField").hidden = m !== "reg";
+    $("authPass").setAttribute("autocomplete", m === "reg" ? "new-password" : "current-password");
+    $("authSubmit").textContent = m === "reg" ? "Tạo tài khoản, dùng thử 3 ngày" : "Đăng nhập";
+    $("authNote").hidden = m !== "reg";
+    $("authErr").textContent = "";
+  }
+  function openAuth(mode, msg) {
+    setAuthMode(mode || "reg");
+    if (msg) $("authErr").textContent = msg;
+    $("authModal").hidden = false; $("authEmail").focus();
+  }
+  $("tabReg").addEventListener("click", function () { setAuthMode("reg"); });
+  $("tabLogin").addEventListener("click", function () { setAuthMode("login"); });
+  $("authClose").addEventListener("click", function () { $("authModal").hidden = true; });
+  $("authForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = $("authEmail").value.trim(), pass = $("authPass").value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $("authErr").textContent = "Email chưa đúng định dạng."; return; }
+    if (pass.length < 8) { $("authErr").textContent = "Mật khẩu cần ít nhất 8 ký tự."; return; }
+    $("authSubmit").disabled = true; $("authErr").textContent = "";
+    var body = { email: email, password: pass };
+    if (authMode === "reg") body.name = $("authName").value.trim();
+    fetch(authMode === "reg" ? "/api/auth/register" : "/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        if (!x.ok) { $("authErr").textContent = x.j.error || "Không thành công. Thử lại."; $("authSubmit").disabled = false; return; }
+        if (authMode === "reg") {
+          SRV.user = x.j.user;
+          try { localStorage.setItem("dhdn-owner", x.j.user.id); } catch (err) {}
+          return pushSync().then(function () { location.reload(); });
+        }
+        location.reload();
+      })
+      .catch(function () { $("authErr").textContent = "Mất kết nối. Kiểm tra mạng rồi thử lại."; $("authSubmit").disabled = false; });
+  });
+  function renderAccount() {
+    var u = SRV.user;
+    $("who").hidden = !u;
+    $("who").textContent = u ? (u.name || u.email) : "";
+    $("acctBtn").textContent = u ? "Đăng xuất" : "Đăng nhập";
+    $("adminLink").hidden = !(u && u.role === "admin");
+  }
+  $("acctBtn").addEventListener("click", function () {
+    if (!SRV.user) { openAuth("login"); return; }
+    pushSync().then(function () {
+      return fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+    }).then(function () {
+      try { ["dhdn-cfg2", "dhdn-tasks", "dhdn-bought", "dhdn-owner"].forEach(function (k) { localStorage.removeItem(k); }); } catch (err) {}
+      location.reload();
+    });
+  });
+  renderAccount();
+  if (SRV.needUpload) pushSync();
+
+  // Quay về từ cổng thanh toán
+  (function () {
+    var q = new URLSearchParams(location.search), st = q.get("pay"), order = q.get("order");
+    if (!st) return;
+    history.replaceState(null, "", location.pathname + location.hash);
+    if (st === "cancel") { toast("Bạn đã hủy thanh toán. Chưa bị trừ tiền.", true); return; }
+    if (st === "fail") { toast("Thanh toán không thành công. Chưa bị trừ tiền, hãy thử lại.", true); return; }
+    if (!SRV.user || !order) return;
+    var tries = 0;
+    (function check() {
+      fetch("/api/pay/check?order=" + encodeURIComponent(order), { credentials: "same-origin" })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j.order && j.order.status === "PAID") {
+            SRV.user = j.user; lastPlanKind = ""; renderPlan();
+            toast("Đã nhận " + fmt(j.order.amount) + "đ. Gói Người Sống dùng đến " + dstr(new Date(j.user.paidUntil)) + ".");
+          } else if (j.order && j.order.status === "PENDING" && ++tries < 10) {
+            toast("Đang chờ cổng thanh toán xác nhận...");
+            setTimeout(check, 3000);
+          } else if (j.order) {
+            toast("Chưa nhận được tiền cho đơn này. Nếu đã bị trừ tiền, gói sẽ tự kích hoạt trong vài phút.", true);
+          }
+        }).catch(function () {});
+    })();
+  })();
+
+  window.__dhdn = { compute: compute, plan: function () { return planState(); } };
+})();
+</script>
+<script>
+// Hỏi máy chủ xem ai đang đăng nhập, nạp dữ liệu của họ, rồi mới chạy ứng dụng.
+(async function () {
+  var S = { user: null, pay: { qr: false, card: false }, price: 24000, packs: [1, 3, 6, 12] };
+  var KEYS = { cfg: "dhdn-cfg2", tasks: "dhdn-tasks", bought: "dhdn-bought" };
+  try { var r = await fetch("/api/me", { credentials: "same-origin" }); if (r.ok) S = await r.json(); } catch (e) {}
+  if (S.user) {
+    try {
+      var owner = localStorage.getItem("dhdn-owner");
+      var d = await (await fetch("/api/data", { credentials: "same-origin" })).json();
+      if (d && d.data) {
+        Object.keys(KEYS).forEach(function (k) { localStorage.setItem(KEYS[k], JSON.stringify(d.data[k] || (k === "cfg" ? {} : []))); });
+      } else if (owner && owner !== S.user.id) {
+        Object.keys(KEYS).forEach(function (k) { localStorage.removeItem(KEYS[k]); });
+      } else {
+        S.needUpload = true;
+      }
+      localStorage.setItem("dhdn-owner", S.user.id);
+    } catch (e) {}
+  }
+  window.__SERVER = S;
+  var s = document.createElement("script");
+  s.textContent = document.getElementById("appScript").textContent;
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>
