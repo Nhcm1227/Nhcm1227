@@ -94,6 +94,20 @@ export const MEALS = {
 
 export const BEDTIME = '23:00';
 
+// Giờ nên thức dậy = sự kiện đầu tiên trong ngày (theo lịch) trừ 1 tiếng
+// T2-T6: lớp / nấu ăn 9:00 → dậy 8:00 · CN: gym 8:00 → dậy 7:00 · T7: trống
+export const WAKE = { 0: '07:00', 1: '08:00', 2: '08:00', 3: '08:00', 4: '08:00', 5: '08:00', 6: '08:30' };
+
+// Nhật ký thói quen tối hôm trước → app tính ảnh hưởng tới điểm hồi phục
+export const JOURNAL = [
+  { id: 'caffeine', label: 'Cà phê/trà sau 15h' },
+  { id: 'alcohol', label: 'Rượu bia' },
+  { id: 'screen', label: 'Lướt điện thoại trên giường' },
+  { id: 'lateMeal', label: 'Ăn trong 2h trước khi ngủ' },
+  { id: 'stretch', label: 'Giãn cơ / tắm nước ấm' },
+  { id: 'nap', label: 'Ngủ trưa hôm qua' },
+];
+
 export const DAY_NAMES = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
 export const DAY_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 

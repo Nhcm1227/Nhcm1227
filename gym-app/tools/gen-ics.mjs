@@ -3,7 +3,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { WORKOUTS, MEALS, BEDTIME } from '../data.js';
+import { WORKOUTS, MEALS, BEDTIME, WAKE } from '../data.js';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'ics');
 const TZ = 'Asia/Ho_Chi_Minh';
@@ -90,6 +90,13 @@ for (const [dowStr, meals] of Object.entries(MEALS)) {
     uid: `meal-${dow}-${i}`, date: dateFor(dow), min: toMin(m.time), rrule: `FREQ=WEEKLY;BYDAY=${RRDAY[dow]}`,
     title: `🍽️ ${m.label}`, desc: 'Ăn đủ protein, ghi món vào GymTrack.',
   })));
+}
+for (const [dowStr, wake] of Object.entries(WAKE)) {
+  const dow = +dowStr;
+  ev.push(event({
+    uid: `checkin-${dow}`, date: dateFor(dow), min: toMin(wake) + 10, rrule: `FREQ=WEEKLY;BYDAY=${RRDAY[dow]}`,
+    title: '🌅 Check-in buổi sáng', desc: 'Mở GymTrack: ghi giờ ngủ, cảm giác cơ thể, cân nặng → xem điểm Hồi phục hôm nay.',
+  }));
 }
 ev.push(event({
   uid: 'bed', date: dateFor(1), min: toMin(BEDTIME) - 30, rrule: 'FREQ=DAILY',
