@@ -66,22 +66,51 @@ export function dayLoad(k) {
   out.load = out.rpe * out.minutes;
   return out;
 }
-// Tải tập 0–100, bão hoà dần (buổi RPE 7 × 75′ ≈ 53)
+// Hoạt động trong ngày: buổi tập theo lịch + hoạt động tự ghi (chạy, bóng rổ…)
+export function dayActivities(k) {
+  const out = [];
+  const d = peek(k), w = workoutFor(k);
+  const L = dayLoad(k);
+  if (w && L.load) out.push({ kind: 'workout', name: w.title, minutes: L.minutes, rpe: L.rpe, load: L.load, volume: L.volume, done: !!d?.done });
+  (d?.activities || []).forEach((a, i) => out.push({ kind: 'act', i, name: a.type, minutes: a.minutes, rpe: a.rpe, load: a.minutes * a.rpe }));
+  return out;
+}
+export const totalLoad = k => dayActivities(k).reduce((a, x) => a + x.load, 0);
+// Tải tập 0–100, bão hoà dần (buổi RPE 7 × 75′ ≈ 53) — cộng dồn mọi hoạt động trong ngày
 export const strainOf = load => Math.round(100 * (1 - Math.exp(-load / 700)));
-export const strain = k => strainOf(dayLoad(k).load);
+export const strain = k => strainOf(totalLoad(k));
 
 /* ---------- giấc ngủ ---------- */
 // Checkin của ngày k ghi giấc ngủ của đêm kết thúc vào sáng ngày k
-export function sleepNeed(k) {
-  let need = 7.5;
-  need += (strain(addDays(k, -1)) / 100) * 0.75;
+export function sleepNeedParts(k) {
+  const base = 7.5;
+  const fromStrain = (strain(addDays(k, -1)) / 100) * 0.75;
   let debt = 0;
   for (let i = 1; i <= 3; i++) {
     const h = peek(addDays(k, -i))?.checkin?.sleepH;
     if (h != null) debt += Math.max(0, 7.5 - h);
   }
-  need += Math.min(1.5, debt * 0.33);
-  return Math.round(need * 4) / 4;
+  const fromDebt = Math.min(1.5, debt * 0.33);
+  return { base, fromStrain, fromDebt, debt, total: Math.round((base + fromStrain + fromDebt) * 4) / 4 };
+}
+export const sleepNeed = k => sleepNeedParts(k).total;
+// Hiệu quả ngủ: % số giờ ngủ so với nhu cầu
+export function sleepPerf(k) {
+  const h = peek(k)?.checkin?.sleepH;
+  return h == null ? null : Math.min(100, Math.round((h / sleepNeed(k)) * 100));
+}
+// Độ đều đặn: độ lệch giờ ngủ/giờ dậy trong 4 ngày gần nhất (lệch 0′ = 100%, lệch ≥ 90′ = 0%)
+const sd = a => { const m = avg(a); return Math.sqrt(avg(a.map(x => (x - m) ** 2))); };
+export function sleepConsistency(k) {
+  const beds = [], wakes = [];
+  for (let i = 0; i < 4; i++) {
+    const c = peek(addDays(k, -i))?.checkin;
+    if (!c?.bed || !c?.wake) continue;
+    let b = toMin(c.bed); if (b < 12 * 60) b += 1440;
+    beds.push(b); wakes.push(toMin(c.wake));
+  }
+  if (beds.length < 2) return null;
+  return Math.round(clamp(100 - ((sd(beds) + sd(wakes)) / 2) * (100 / 90), 0, 100));
 }
 export function bedtimeTonight() {
   const tomorrow = addDays(todayKey(), 1);
@@ -245,7 +274,28 @@ export function weekReport() {
   const logged = ks.filter(k => sum(peek(k)?.food, 'kcal') > 0);
   const protHit = logged.filter(k => sum(peek(k).food, 'p') >= targets(dowOf(k)).protein * 0.9).length;
   const waterHit = ks.filter(k => sum(peek(k)?.water, 'ml') >= targets(dowOf(k)).water).length;
-  const totalLoad = ks.reduce((a, k) => a + dayLoad(k).load, 0);
+  const weekLoad = ks.reduce((a, k) => a + totalLoad(k), 0);
   return { days: ks.length, planned, done, avgRec: recs.length ? Math.round(avg(recs.map(r => r.score))) : null,
-    avgSleep: sleeps.length ? avg(sleeps) : null, logged: logged.length, protHit, waterHit, totalLoad };
+    avgSleep: sleeps.length ? avg(sleeps) : null, logged: logged.length, protHit, waterHit, totalLoad: weekLoad };
+}
+
+/* ---------- các yếu tố tạo nên điểm hồi phục ---------- */
+// good: hướng tốt ('up' = càng cao càng tốt). base: trung bình 14 ngày trước của chính bạn
+export function contributors(k) {
+  const c = peek(k)?.checkin;
+  if (!c) return [];
+  const r = recovery(k);
+  const avgOf = f => {
+    const v = [];
+    for (let i = 1; i <= 14; i++) { const x = peek(addDays(k, -i))?.checkin?.[f]; if (x != null && x !== '') v.push(Number(x)); }
+    return v.length >= 3 ? avg(v) : null;
+  };
+  return [
+    { id: 'hrv', label: 'HRV', unit: 'ms', value: c.hrv ?? null, base: r.hrvBase, good: 'up', hint: 'Biến thiên nhịp tim — cao hơn mức thường = hệ thần kinh đã hồi phục' },
+    { id: 'rhr', label: 'Nhịp tim nghỉ', unit: 'bpm', value: c.rhr ?? null, base: r.rhrBase, good: 'down', hint: 'Thấp hơn mức thường = tim ít phải làm việc, cơ thể đã nghỉ tốt' },
+    { id: 'sleep', label: 'Hiệu quả ngủ', unit: '%', value: sleepPerf(k), base: avgOf('sleepH') != null ? Math.min(100, Math.round(avgOf('sleepH') / 7.5 * 100)) : null, good: 'up', hint: 'Số giờ ngủ so với nhu cầu đêm qua' },
+    { id: 'sore', label: 'Đau mỏi cơ', unit: '/5', value: c.sore ?? null, base: avgOf('sore'), good: 'down', hint: '1 = không đau, 5 = rất đau' },
+    { id: 'energy', label: 'Năng lượng', unit: '/5', value: c.energy ?? null, base: avgOf('energy'), good: 'up', hint: '1 = kiệt sức, 5 = rất sung' },
+    { id: 'stress', label: 'Căng thẳng', unit: '/5', value: c.stress ?? null, base: avgOf('stress'), good: 'down', hint: '1 = thoải mái, 5 = rất stress' },
+  ];
 }

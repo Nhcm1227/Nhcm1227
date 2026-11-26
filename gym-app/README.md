@@ -12,6 +12,8 @@ Web app (PWA) cho iPhone. Lịch tập được lấy từ Google Calendar (24/1
   - *Hồi phục 0–100%*: điểm xanh, vàng hoặc đỏ kèm gợi ý cường độ tập. Khi điểm đỏ, app tự bật chế độ nhẹ (bớt 1 set mỗi bài).
   - *Tải tập 0–100*: tính bằng sRPE (RPE × số phút tập).
   - *Nhu cầu ngủ*: 7,5 giờ, cộng thêm theo tải tập hôm trước và số giờ ngủ còn thiếu. App gợi ý giờ đi ngủ dựa vào giờ phải dậy hôm sau (lấy theo lịch).
+- **Tổng quan**: 3 vòng Giấc ngủ, Hồi phục và Tải tập (bấm vào vòng để xem chi tiết). Có nút ‹ › để xem các ngày trước, thanh định hướng tải tập theo vùng mục tiêu, nút ghi thêm hoạt động (chạy, bóng rổ…), và các ô HRV, nhịp tim nghỉ, calo, nước.
+- **Giấc ngủ chi tiết**: nhập giờ đi ngủ và giờ dậy, app tính % hiệu quả ngủ, độ đều đặn (4 ngày), nợ ngủ và cách tính nhu cầu ngủ.
 - **Tăng tạ dần**: ghi kg × rep cho từng set, tự điền kết quả buổi trước, và gợi ý tăng tạ khi bạn đạt đủ rep tối đa ở mọi set.
 - **Xu hướng**: báo cáo tuần; biểu đồ Hồi phục và Tải tập trong 14 ngày; cân nặng với đường trung bình 7 ngày; xu hướng %/tuần và đề xuất kcal tự điều chỉnh (ước tính TDEE thực tế); 1RM ước tính của từng bài; ảnh hưởng của từng thói quen tới điểm hồi phục.
 - **Ghi ăn nhanh**: món gần đây hiện lên đầu, có nút chép lại bữa ăn của hôm qua.

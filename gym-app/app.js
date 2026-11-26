@@ -1,12 +1,13 @@
-import { WORKOUTS, MEALS, DAY_NAMES, DAY_SHORT, FOODS, WAKE, JOURNAL } from './data.js';
+import { WORKOUTS, MEALS, DAY_NAMES, DAY_SHORT, FOODS, WAKE, JOURNAL, BEDTIME } from './data.js';
 import {
   state, save, replaceState, resetState, pad, keyOf, todayKey, addDays, dowOf, day, peek, sum, avg, esc,
-  toMin, fromMin, nowMin, fmtL, fmtH, num, clamp,
+  toMin, fromMin, nowMin, fmtL, fmtH, num, clamp, dateOf,
 } from './store.js';
 import {
   targets, isCardio, repLow, shownSets, isLight, dayLoad, strain, strainOf, sleepNeed, bedtimeTonight, recovery,
   recColor, advice, journalImpact, history, suggestion, allExerciseNames, e1rm, weightSeries, movingAvg,
-  weightTrend, kcalAdvice, weekReport, weekKeys, workoutFor,
+  weightTrend, kcalAdvice, weekReport, weekKeys, workoutFor, dayActivities, totalLoad, sleepNeedParts, sleepPerf,
+  sleepConsistency, contributors,
 } from './metrics.js';
 
 /* ================= UI helpers ================= */
@@ -114,7 +115,7 @@ function checkReminders() {
 /* ================= tabs ================= */
 let tab = 'today';
 let workoutDow = new Date().getDay();
-const TITLES = { today: 'Hôm nay', workout: 'Tập luyện', food: 'Ăn uống', water: 'Uống nước', trends: 'Xu hướng' };
+const TITLES = { today: 'Tổng quan', workout: 'Tập luyện', food: 'Ăn uống', water: 'Uống nước', trends: 'Xu hướng' };
 function render() {
   const d = new Date();
   $('#today-label').textContent = `${DAY_NAMES[d.getDay()]}, ${d.getDate()}/${d.getMonth() + 1}`;
@@ -125,11 +126,13 @@ function render() {
 document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => {
   tab = b.dataset.tab;
   if (tab === 'workout') workoutDow = new Date().getDay();
+  if (tab === 'today') dayOffset = 0;
   if (tab !== 'workout') releaseWake();
   render(); window.scrollTo(0, 0);
 }));
 
-/* ================= today ================= */
+/* ================= today / tổng quan ================= */
+let dayOffset = 0;
 function nextWorkout() {
   const now = new Date();
   for (let i = 0; i < 8; i++) {
@@ -149,92 +152,220 @@ function countdownText(target) {
   if (h >= 24) return `${Math.floor(h / 24)} ngày ${h % 24} giờ`;
   return h ? `${h} giờ ${m} phút` : `${m} phút`;
 }
+const ACT_TYPES = ['Chạy bộ', 'Bóng rổ', 'Pickleball', 'Golf', 'Đi bộ', 'Đạp xe', 'Bơi', 'Cầu lông', 'Khác'];
+const ACT_ICON = { 'Chạy bộ': '🏃', 'Bóng rổ': '🏀', Pickleball: '🏓', Golf: '⛳', 'Đi bộ': '🚶', 'Đạp xe': '🚴', Bơi: '🏊', 'Cầu lông': '🏸', Khác: '⚡' };
+const dayLabel = k => {
+  const off = Math.round((dateOf(k) - dateOf(todayKey())) / 864e5);
+  return off === 0 ? 'Hôm nay' : off === -1 ? 'Hôm qua' : `${DAY_NAMES[dowOf(k)]}, ${shortDate(k)}`;
+};
+const fmtNum = v => (Number.isInteger(+v) ? +v : (+v).toFixed(1));
+
+function dial(kind, value, color, label, sub) {
+  const txt = value == null ? '—' : kind === 'strain' ? value : `${value}<small>%</small>`;
+  return `<button class="dial" data-detail="${kind}">${ring(value == null ? 0 : value / 100, color, 100, 8, `<b>${txt}</b>`)}
+    <div class="dial-lbl">${label}</div><div class="dial-sub">${sub}</div></button>`;
+}
+function coachBar(st, range) {
+  return `<div class="coach"><div class="coach-track">
+    <div class="coach-band" style="left:${range[0]}%;width:${range[1] - range[0]}%"></div>
+    <div class="coach-fill" style="width:${st}%"></div>
+    <div class="coach-mark" style="left:${st}%"></div></div>
+    <div class="row between tiny muted" style="margin-top:6px"><span>0</span><span>Vùng mục tiêu ${range[0]}–${range[1]}</span><span>100</span></div></div>`;
+}
+// biểu đồ cột nhỏ cho 7 ngày
+function miniBars(ks, values, max, colorOf, fmt = v => v) {
+  return `<div class="week mb">${ks.map((k, i) => {
+    const v = values[i];
+    return `<div class="col"><div class="tiny muted">${v == null ? '' : fmt(v)}</div><div class="b" style="height:${v ? clamp(v / max, 0.03, 1) * 100 : 3}%;background:${v ? colorOf(v, i) : 'var(--card-2)'}"></div><div class="lbl">${DAY_SHORT[dowOf(k)]}</div></div>`;
+  }).join('')}</div>`;
+}
+
 function renderToday() {
-  const k = todayKey();
-  const t = targets();
-  const dd = day();
-  const water = sum(dd.water, 'ml');
-  const kcal = sum(dd.food, 'kcal'), prot = sum(dd.food, 'p');
+  const k = addDays(todayKey(), dayOffset);
+  const isToday = dayOffset === 0;
+  const dd = day(k);
+  const t = targets(dowOf(k));
   const rec = recovery(k);
-  const adv = rec && advice(rec.score);
+  const adv = advice(rec ? rec.score : 50);
   const st = strain(k);
-  const bt = bedtimeTonight();
-  const nw = nextWorkout();
-  const now = nowMin();
-  const nextSlot = waterSlots().find(m => m > now);
-  const plan = todayPlan();
-  if (nextSlot) plan.push({ min: nextSlot, kind: 'water', title: 'Nhắc uống nước tiếp theo', body: `Mục tiêu lúc đó: ${fmtL(expectedWaterAt(nextSlot))}` });
-  plan.sort((a, b) => a.min - b.min);
-  const nextIdx = plan.findIndex(p => p.min >= now);
-  const wr = weekReport();
+  const sp = sleepPerf(k);
+  const acts = dayActivities(k);
+  const water = sum(dd.water, 'ml'), kcal = sum(dd.food, 'kcal'), prot = sum(dd.food, 'p');
+  const c = dd.checkin;
 
   let html = '';
-  if (isIOS && !standalone) html += `<div class="banner">📲 <b>Cài lên iPhone:</b> nhấn <b>Chia sẻ</b> trong Safari → <b>Thêm vào MH chính</b>. Mở từ biểu tượng để dùng như app và bật thông báo.</div>`;
+  if (isToday && isIOS && !standalone) html += `<div class="banner">📲 <b>Cài lên iPhone:</b> bấm <b>•••</b> → <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>. Mở từ biểu tượng để dùng như app và bật thông báo.</div>`;
+  html += `<div class="datenav"><button data-off="-1" aria-label="Ngày trước">‹</button><b>${dayLabel(k)}</b><button data-off="1" ${isToday ? 'disabled' : ''} aria-label="Ngày sau">›</button></div>`;
 
-  if (!rec) {
-    html += `<section class="card checkin-cta">
-      <div class="row" style="gap:14px"><div class="big-emoji">🌅</div><div style="flex:1"><h2 style="margin:0 0 2px">Check-in buổi sáng</h2>
-      <div class="muted small">30 giây · tính điểm Hồi phục, nhu cầu ngủ và gợi ý cường độ tập hôm nay.</div></div></div>
-      <button class="btn primary" id="do-checkin" style="margin-top:12px">Bắt đầu check-in</button></section>`;
-  } else {
-    const strainPct = st / 100;
-    html += `<section class="card">
-      <div class="trio">
-        <div>${ring(rec.score / 100, recColor(rec.score), 100, 10, `<b>${rec.score}%</b>`)}<div class="trio-lbl">Hồi phục</div></div>
-        <div>${ring(strainPct, 'var(--gym)', 100, 10, `<b>${st}</b>`)}<div class="trio-lbl">Tải tập<br><span class="muted">mục tiêu ${adv.range[0]}–${adv.range[1]}</span></div></div>
-        <div>${ring(rec.sleepH / rec.need, 'var(--fat)', 100, 10, `<b>${fmtH(rec.sleepH)}</b>`)}<div class="trio-lbl">Giấc ngủ<br><span class="muted">cần ${fmtH(rec.need)}</span></div></div>
-      </div>
-      <div class="advice" style="border-color:${recColor(rec.score)}"><b style="color:${recColor(rec.score)}">● ${adv.zone} — ${adv.title}</b><div class="small">${adv.text}</div></div>
-      <div class="row between small" style="margin-top:10px"><span class="muted">🌙 Tối nay ngủ trước <b style="color:var(--text)">${fromMin(bt.bed)}</b> (cần ${fmtH(bt.need)})</span>
-      <button class="chip" id="do-checkin">Sửa</button></div>
-    </section>`;
-  }
-
-  if (nw) {
-    const label = nw.offset === 0 ? 'Hôm nay' : nw.offset === 1 ? 'Ngày mai' : DAY_NAMES[nw.dow];
-    const live = nw.start <= new Date();
-    html += `<section class="card hero">
-      <span class="tag">${live ? 'ĐANG TẬP' : 'BUỔI TẬP TIẾP THEO'}</span>
-      <h3>${esc(nw.w.title)}</h3>
-      <div class="muted">${esc(nw.w.subtitle)}</div>
-      <div class="muted small" style="margin-top:4px">${label} · ${nw.w.start}–${nw.w.end}${nw.w.location ? ' · ' + nw.w.location : ''}</div>
-      <div class="countdown" data-countdown="${nw.start.getTime()}">${live ? 'Đang diễn ra' : countdownText(nw.start)}</div>
-      <button class="btn primary" style="margin-top:12px" data-go-workout="${nw.dow}">${live ? 'Mở buổi tập' : 'Xem bài tập'}</button>
-    </section>`;
-  } else if (dd.done) {
-    const L = dayLoad(k);
-    html += `<section class="card hero"><span class="tag">ĐÃ XONG HÔM NAY</span><h3>🔥 ${esc(workoutFor(k)?.title || '')}</h3>
-      <div class="muted small">${L.minutes} phút · RPE ${L.rpe} · Tải tập ${st}${L.volume ? ` · ${Math.round(L.volume).toLocaleString('vi')} kg khối lượng` : ''}</div></section>`;
-  }
-
-  html += `<div class="grid-2">
-    <section class="card" data-go="water" style="display:grid;justify-items:center;gap:8px">
-      ${ring(water / t.water, 'var(--water)', 110, 11, `<b>${fmtL(water)}</b><span class="muted small">/ ${fmtL(t.water)}</span>`)}
-      <button class="btn water" data-add-water="250" style="min-height:38px">+250 ml</button>
-    </section>
-    <section class="card" data-go="food" style="display:grid;justify-items:center;gap:8px">
-      ${ring(kcal / t.kcal, 'var(--food)', 110, 11, `<b>${Math.round(kcal)}</b><span class="muted small">/ ${t.kcal} kcal</span>`)}
-      <div class="small muted" style="width:100%">Protein ${Math.round(prot)}/${t.protein}g</div>
-      <div style="width:100%">${bar(prot / t.protein, 'var(--protein)')}</div>
-    </section>
-  </div>`;
-  html += `<section class="card">
-    <div class="card-head"><h2>Lịch hôm nay</h2><span class="muted small">Tuần này: ${wr.done}/${Object.keys(WORKOUTS).length} buổi</span></div>
-    <ul class="timeline">${plan.map((p, i) => `<li class="${p.min < now && i !== nextIdx ? 'past' : ''} ${i === nextIdx ? 'next' : ''}">
-      <span class="t">${fromMin(p.min)}</span><span class="dot ${p.kind}"></span>
-      <div><div style="font-weight:600">${esc(p.title)}</div><div class="muted small">${esc(p.body)}</div></div></li>`).join('')}</ul>
+  html += `<section class="card dials-card"><div class="dials">
+    ${dial('sleep', sp, 'var(--fat)', 'Giấc ngủ', c?.sleepH != null ? fmtH(c.sleepH) : 'chưa ghi')}
+    ${dial('recovery', rec?.score ?? null, rec ? recColor(rec.score) : 'var(--line)', 'Hồi phục', rec ? `Vùng ${adv.zone.toLowerCase()}` : 'chưa check-in')}
+    ${dial('strain', st, 'var(--gym)', 'Tải tập', `/100 · mục tiêu ${adv.range[0]}+`)}
+  </div>
+  ${rec ? `<div class="advice" style="border-color:${recColor(rec.score)}"><b style="color:${recColor(rec.score)}">${adv.title}</b><div class="small">${adv.text}</div></div>`
+    : `<button class="btn primary" id="do-checkin" style="margin-top:14px">🌅 Check-in ${isToday ? 'buổi sáng' : dayLabel(k).toLowerCase()} · 30 giây</button>`}
   </section>`;
-  if (!('Notification' in window) || Notification.permission !== 'granted') {
-    html += `<section class="card"><h2>🔔 Nhắc nhở</h2>
-      <p class="muted small" style="margin-top:0">iPhone chỉ cho web app gửi thông báo khi app đang mở. Để luôn được nhắc, thêm lịch nhắc vào app Lịch của iPhone trong <b>Cài đặt</b>.</p>
-      <button class="btn" id="open-settings-2">Mở cài đặt nhắc nhở</button></section>`;
+
+  html += `<section class="card"><div class="card-head"><h2>Định hướng tải tập</h2><span class="muted small">${st}/100</span></div>
+    ${coachBar(st, adv.range)}
+    <div class="small" style="margin-top:10px">${st >= adv.range[1] ? '⚠️ Đã vượt vùng mục tiêu — nên dừng lại, ưu tiên ăn và ngủ.'
+      : st >= adv.range[0] ? '✅ Đã nằm trong vùng mục tiêu.'
+      : `Còn khoảng <b>${adv.range[0] - st}</b> điểm để vào vùng mục tiêu${rec ? '' : ' <span class="muted">(check-in để có mục tiêu theo hồi phục)</span>'}.`}</div>
+  </section>`;
+
+  html += `<section class="card"><div class="card-head"><h2>Hoạt động</h2><button class="chip" id="add-act">＋ Thêm</button></div>
+    ${acts.length ? `<ul class="log">${acts.map(a => `<li><span class="act-ic">${a.kind === 'workout' ? '🏋️' : ACT_ICON[a.name] || '⚡'}</span>
+      <div class="grow"><div class="name">${esc(a.name)}${a.kind === 'workout' && !a.done ? ' <span class="muted small">(đang tập)</span>' : ''}</div>
+      <div class="muted small">${a.minutes} phút · RPE ${a.rpe}${a.volume ? ` · ${Math.round(a.volume).toLocaleString('vi')} kg` : ''}</div></div>
+      <b class="act-st">${strainOf(a.load)}</b>${a.kind === 'act' ? `<button class="del" data-del-act="${a.i}" aria-label="Xóa">✕</button>` : ''}</li>`).join('')}</ul>`
+      : '<div class="empty small">Chưa có hoạt động. Buổi gym tự được tính khi bạn bấm set; thêm chạy bộ, bóng rổ… bằng nút ＋.</div>'}
+  </section>`;
+
+  html += `<div class="tiles">
+    <button class="tile" data-detail="recovery"><span>HRV</span><b>${c?.hrv ?? '—'}<small> ms</small></b><em>${rec?.hrvBase ? `TB ${Math.round(rec.hrvBase)} ms` : 'nhập trong check-in'}</em></button>
+    <button class="tile" data-detail="recovery"><span>Nhịp tim nghỉ</span><b>${c?.rhr ?? '—'}<small> bpm</small></b><em>${rec?.rhrBase ? `TB ${Math.round(rec.rhrBase)} bpm` : 'nhập trong check-in'}</em></button>
+    <button class="tile" ${isToday ? 'data-go="food"' : ''}><span>Calo nạp</span><b>${Math.round(kcal)}<small> / ${t.kcal}</small></b><em>Protein ${Math.round(prot)}/${t.protein}g</em></button>
+    <button class="tile" ${isToday ? 'data-go="water"' : ''}><span>Nước</span><b>${fmtL(water)}</b><em>mục tiêu ${fmtL(t.water)}</em></button>
+  </div>`;
+
+  if (isToday) {
+    const nw = nextWorkout();
+    if (nw) {
+      const label = nw.offset === 0 ? 'Hôm nay' : nw.offset === 1 ? 'Ngày mai' : DAY_NAMES[nw.dow];
+      const live = nw.start <= new Date();
+      html += `<section class="card hero">
+        <span class="tag">${live ? 'ĐANG TẬP' : 'BUỔI TẬP TIẾP THEO'}</span>
+        <h3>${esc(nw.w.title)}</h3><div class="muted">${esc(nw.w.subtitle)}</div>
+        <div class="muted small" style="margin-top:4px">${label} · ${nw.w.start}–${nw.w.end}${nw.w.location ? ' · ' + nw.w.location : ''}</div>
+        <div class="countdown" data-countdown="${nw.start.getTime()}">${live ? 'Đang diễn ra' : countdownText(nw.start)}</div>
+        <button class="btn primary" style="margin-top:12px" data-go-workout="${nw.dow}">${live ? 'Mở buổi tập' : 'Xem bài tập'}</button>
+      </section>`;
+    }
+    const now = nowMin();
+    const nextSlot = waterSlots().find(m => m > now);
+    const plan = todayPlan();
+    if (nextSlot) plan.push({ min: nextSlot, kind: 'water', title: 'Nhắc uống nước tiếp theo', body: `Mục tiêu lúc đó: ${fmtL(expectedWaterAt(nextSlot))}` });
+    plan.sort((a, b) => a.min - b.min);
+    const nextIdx = plan.findIndex(p => p.min >= now);
+    html += `<section class="card"><div class="card-head"><h2>Lịch hôm nay</h2><span class="muted small">Tuần này: ${weekReport().done}/${Object.keys(WORKOUTS).length} buổi</span></div>
+      <ul class="timeline">${plan.map((p, i) => `<li class="${p.min < now && i !== nextIdx ? 'past' : ''} ${i === nextIdx ? 'next' : ''}">
+        <span class="t">${fromMin(p.min)}</span><span class="dot ${p.kind}"></span>
+        <div><div style="font-weight:600">${esc(p.title)}</div><div class="muted small">${esc(p.body)}</div></div></li>`).join('')}</ul></section>`;
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      html += `<section class="card"><h2>🔔 Nhắc nhở</h2>
+        <p class="muted small" style="margin-top:0">iPhone chỉ cho web app gửi thông báo khi app đang mở. Để luôn được nhắc, thêm lịch nhắc vào app Lịch trong <b>Cài đặt</b>.</p>
+        <button class="btn" id="open-settings-2">Mở cài đặt nhắc nhở</button></section>`;
+    }
   }
+
   view.innerHTML = html;
-  view.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', e => { if (e.target.closest('button')) return; tab = el.dataset.go; render(); }));
+  view.querySelectorAll('[data-off]').forEach(b => b.addEventListener('click', () => { dayOffset = Math.min(0, dayOffset + +b.dataset.off); renderToday(); }));
+  view.querySelectorAll('[data-detail]').forEach(b => b.addEventListener('click', () => openDetail(b.dataset.detail, k)));
+  view.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => { tab = el.dataset.go; render(); }));
   view.querySelectorAll('[data-go-workout]').forEach(el => el.addEventListener('click', () => { tab = 'workout'; workoutDow = +el.dataset.goWorkout; render(); }));
-  view.querySelectorAll('[data-add-water]').forEach(el => el.addEventListener('click', () => addWater(+el.dataset.addWater)));
-  $('#do-checkin')?.addEventListener('click', openCheckin);
+  view.querySelectorAll('[data-del-act]').forEach(b => b.addEventListener('click', () => { dd.activities.splice(+b.dataset.delAct, 1); save(); renderToday(); }));
+  $('#do-checkin')?.addEventListener('click', () => openCheckin(k));
+  $('#add-act').addEventListener('click', () => openActivity(k));
   $('#open-settings-2')?.addEventListener('click', openSettings);
+}
+
+/* ================= trang chi tiết ================= */
+function openDetail(kind, k) {
+  const ks = Array.from({ length: 7 }, (_, i) => addDays(k, i - 6));
+  if (kind === 'recovery') {
+    const rec = recovery(k);
+    if (!rec) { openCheckin(k); return; }
+    const adv = advice(rec.score);
+    const cs = contributors(k);
+    const recs = ks.map(x => recovery(x)?.score ?? null);
+    openSheet(`<div class="detail-head">${ring(rec.score / 100, recColor(rec.score), 150, 12, `<b style="font-size:40px">${rec.score}<small>%</small></b><span class="muted small">Hồi phục · ${dayLabel(k)}</span>`)}</div>
+      <div class="advice" style="border-color:${recColor(rec.score)}"><b style="color:${recColor(rec.score)}">Vùng ${adv.zone.toLowerCase()} — ${adv.title}</b><div class="small">${adv.text}</div></div>
+      <h3 class="sec">Các yếu tố</h3>
+      <ul class="contrib">${cs.map(x => {
+        if (x.value == null) return `<li><div class="grow"><b>${x.label}</b><div class="tiny muted">${x.hint}</div></div><span class="muted small">chưa có</span></li>`;
+        let cls = 'neutral', arrow = '';
+        if (x.base != null) {
+          const diff = x.value - x.base;
+          const thr = x.unit === '/5' ? 0.3 : x.unit === '%' ? 3 : x.base * 0.03;
+          const better = x.good === 'up' ? diff > 0 : diff < 0;
+          if (Math.abs(diff) > thr) { cls = better ? 'good' : 'bad'; arrow = diff > 0 ? '↑ ' : '↓ '; }
+        }
+        return `<li><div class="grow"><b>${x.label}</b><div class="tiny muted">${x.hint}</div></div>
+          <div class="cv ${cls}"><b>${arrow}${fmtNum(x.value)}<small>${x.unit}</small></b><span class="tiny muted">${x.base != null ? `TB ${fmtNum(x.base)}${x.unit}` : 'chưa đủ dữ liệu'}</span></div></li>`;
+      }).join('')}</ul>
+      <h3 class="sec">7 ngày</h3>${miniBars(ks, recs, 100, v => recColor(v), v => v + '%')}
+      <p class="tiny muted">${rec.usedPhys ? 'Điểm = 60% HRV & nhịp tim nghỉ (so với mức trung bình của bạn) + 40% giấc ngủ và cảm nhận.' : 'Điểm hiện dựa trên giấc ngủ và cảm nhận. Nhập HRV & nhịp tim nghỉ (Apple Watch → app Sức khỏe) ít nhất 3 ngày để chính xác hơn.'}</p>
+      <button class="btn" id="edit-ci">Sửa check-in</button>`);
+    $('#edit-ci').addEventListener('click', () => openCheckin(k));
+  } else if (kind === 'sleep') {
+    const c = peek(k)?.checkin;
+    if (!c) { openCheckin(k); return; }
+    const parts = sleepNeedParts(k);
+    const sp = sleepPerf(k);
+    const cons = sleepConsistency(k);
+    const hours = ks.map(x => peek(x)?.checkin?.sleepH ?? null);
+    const bt = bedtimeTonight();
+    openSheet(`<div class="detail-head">${ring(sp / 100, 'var(--fat)', 150, 12, `<b style="font-size:40px">${sp}<small>%</small></b><span class="muted small">Hiệu quả ngủ</span>`)}</div>
+      <div class="stat-rows">
+        <div><span>Đã ngủ</span><b>${fmtH(c.sleepH)}</b></div>
+        <div><span>Nhu cầu đêm đó</span><b>${fmtH(parts.total)}</b></div>
+        ${c.bed && c.wake ? `<div><span>Giờ ngủ → dậy</span><b>${c.bed} → ${c.wake}</b></div>` : ''}
+        <div><span>Độ đều đặn (4 ngày)</span><b>${cons == null ? '—' : cons + '%'}</b></div>
+        <div><span>Nợ ngủ 3 đêm trước</span><b>${fmtH(parts.debt)}</b></div>
+      </div>
+      <h3 class="sec">Nhu cầu ngủ được tính từ</h3>
+      <div class="stat-rows">
+        <div><span>Mức cơ bản</span><b>${fmtH(parts.base)}</b></div>
+        <div><span>+ Do tải tập hôm trước</span><b>${Math.round(parts.fromStrain * 60)} phút</b></div>
+        <div><span>+ Trả nợ ngủ</span><b>${Math.round(parts.fromDebt * 60)} phút</b></div>
+      </div>
+      <h3 class="sec">7 ngày</h3>${miniBars(ks, hours, 10, (v, i) => (v >= sleepNeed(ks[i]) ? 'var(--fat)' : '#a78bfa88'), v => fmtH(v))}
+      ${dayOffset === 0 ? `<div class="advice" style="border-color:var(--fat)"><b>🌙 Tối nay</b><div class="small">Ngủ lúc <b>${fromMin(bt.bed)}</b>, dậy ${fromMin(bt.wake)} — cơ thể cần ${fmtH(bt.need)}.${cons != null && cons < 70 ? ' Giờ ngủ đang thất thường: cố đi ngủ & dậy cùng giờ mỗi ngày.' : ''}</div></div>` : ''}
+      <button class="btn" id="edit-ci" style="margin-top:12px">Sửa giấc ngủ</button>`);
+    $('#edit-ci').addEventListener('click', () => openCheckin(k));
+  } else {
+    const st = strain(k);
+    const acts = dayActivities(k);
+    const rec = recovery(k);
+    const adv = advice(rec ? rec.score : 50);
+    const strs = ks.map(x => strain(x) || null);
+    openSheet(`<div class="detail-head">${ring(st / 100, 'var(--gym)', 150, 12, `<b style="font-size:40px">${st}</b><span class="muted small">Tải tập · /100</span>`)}</div>
+      ${coachBar(st, adv.range)}
+      <h3 class="sec">Hoạt động</h3>
+      ${acts.length ? `<div class="stat-rows">${acts.map(a => `<div><span>${a.kind === 'workout' ? '🏋️' : ACT_ICON[a.name] || '⚡'} ${esc(a.name)} · ${a.minutes}′ × RPE ${a.rpe}</span><b>${a.load}</b></div>`).join('')}
+        <div><span><b>Tổng tải (RPE × phút)</b></span><b>${totalLoad(k)} → ${st}/100</b></div></div>` : '<div class="empty small">Chưa có hoạt động.</div>'}
+      <h3 class="sec">7 ngày</h3>${miniBars(ks, strs, 100, () => 'var(--gym)')}
+      <p class="tiny muted">Tải tập dùng phương pháp sRPE (mức gắng sức 1–10 × số phút) — cộng dồn mọi hoạt động trong ngày rồi quy ra thang 0–100, càng lên cao càng khó tăng thêm. Mục tiêu hôm nay dựa vào điểm hồi phục.</p>
+      <button class="btn primary" id="add-act2">＋ Thêm hoạt động</button>`);
+    $('#add-act2').addEventListener('click', () => openActivity(k));
+  }
+}
+
+/* ================= thêm hoạt động ================= */
+function openActivity(k) {
+  let type = 'Chạy bộ', minutes = 45, rpe = 6;
+  const draw = () => {
+    const before = totalLoad(k);
+    openSheet(`<h2>Thêm hoạt động</h2>
+      <div class="field"><label>Môn</label><div class="tags">${ACT_TYPES.map(x => `<button class="chip ${x === type ? 'active' : ''}" data-type="${x}">${ACT_ICON[x]} ${x}</button>`).join('')}</div></div>
+      <div class="field"><label>Thời gian</label><div class="row between"><button class="chip lg" data-m="-5">−5</button><b class="big-num">${minutes}′</b><button class="chip lg" data-m="5">+5</button></div></div>
+      <div class="field"><label>Mức gắng sức (RPE)</label>
+        <div class="rpe">${Array.from({ length: 10 }, (_, i) => i + 1).map(v => `<button data-rpe="${v}" class="${v === rpe ? 'active' : ''}">${v}</button>`).join('')}</div>
+        <div class="small muted" style="text-align:center">${rpe} · ${RPE_TXT[rpe]}</div></div>
+      <div class="card" style="background:var(--card-2);text-align:center;margin-bottom:12px"><div class="muted small">Tải tập trong ngày</div>
+        <b style="font-size:28px;color:var(--gym)">${strainOf(before)} → ${strainOf(before + minutes * rpe)}</b></div>
+      <button class="btn primary" id="act-save">Lưu hoạt động</button>`);
+    const sh = $('#sheet');
+    sh.querySelectorAll('[data-type]').forEach(b => b.addEventListener('click', () => { type = b.dataset.type; draw(); }));
+    sh.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => { minutes = clamp(minutes + +b.dataset.m, 5, 300); draw(); }));
+    sh.querySelectorAll('[data-rpe]').forEach(b => b.addEventListener('click', () => { rpe = +b.dataset.rpe; draw(); }));
+    $('#act-save').addEventListener('click', () => {
+      const d = day(k);
+      (d.activities ||= []).push({ type, minutes, rpe, t: Date.now() });
+      save(); closeSheet(); render(); showToast(`${ACT_ICON[type]} Đã thêm ${type} · Tải tập ${strain(k)}`);
+    });
+  };
+  draw();
 }
 
 /* ================= check-in ================= */
@@ -244,17 +375,28 @@ const SCALES = [
   { id: 'energy', label: 'Năng lượng', lo: 'Kiệt sức', hi: 'Sung' },
   { id: 'stress', label: 'Căng thẳng', lo: 'Thoải mái', hi: 'Rất stress' },
 ];
-function openCheckin() {
-  const k = todayKey();
+function lastCheckinField(f) {
+  const ks = Object.keys(state.days).filter(x => state.days[x].checkin?.[f]).sort();
+  return ks.length ? state.days[ks[ks.length - 1]].checkin[f] : null;
+}
+function openCheckin(k = todayKey()) {
   const prev = peek(k)?.checkin;
   const lastW = [...weightSeries(30)].pop()?.w;
-  const c = prev ? JSON.parse(JSON.stringify(prev)) : { sleepH: 7, sleepQ: 3, sore: 2, energy: 3, stress: 2, tags: {} };
+  const c = prev ? JSON.parse(JSON.stringify(prev)) : { sleepQ: 3, sore: 2, energy: 3, stress: 2, tags: {} };
   c.tags ||= {};
+  c.bed ||= lastCheckinField('bed') || BEDTIME;
+  c.wake ||= WAKE[dowOf(k)];
+  c.awake ??= 0;
+  const calcH = () => { c.sleepH = Math.max(0, (((toMin(c.wake) - toMin(c.bed)) + 1440) % 1440 - c.awake) / 60); };
+  if (prev?.sleepH == null || prev?.bed) calcH();
   let showBody = !!(prev && (prev.weight || prev.hrv || prev.rhr || prev.waist));
   const draw = () => {
-    openSheet(`<h2>Check-in buổi sáng</h2>
-      <div class="field"><label>Đêm qua ngủ được</label>
-        <div class="row between"><button class="chip lg" data-sl="-0.25">−</button><b class="big-num">${fmtH(c.sleepH)}</b><button class="chip lg" data-sl="0.25">＋</button></div></div>
+    openSheet(`<h2>Check-in · ${dayLabel(k)}</h2>
+      <div class="field"><label>Giấc ngủ đêm qua</label>
+        <div class="sleep-times"><label>Đi ngủ<input type="time" id="ci-bed" value="${c.bed}"></label><span>→</span><label>Thức dậy<input type="time" id="ci-wake" value="${c.wake}"></label></div>
+        <div class="row between small" style="margin-top:8px"><span class="muted">Thức giấc giữa đêm</span>
+          <div class="row" style="gap:6px">${[0, 15, 30, 60].map(m => `<button class="chip ${c.awake === m ? 'active' : ''}" data-awake="${m}">${m ? m + '′' : 'Không'}</button>`).join('')}</div></div>
+        <div class="sleep-total">Ngủ được <b>${fmtH(c.sleepH)}</b> <span class="muted">/ cần ${fmtH(sleepNeed(k))}</span></div></div>
       ${SCALES.map(s => `<div class="field"><label>${s.label}</label>
         <div class="scale">${[1, 2, 3, 4, 5].map(v => `<button data-scale="${s.id}" data-v="${v}" class="${c[s.id] === v ? 'active' : ''}">${v}</button>`).join('')}</div>
         <div class="row between small muted"><span>${s.lo}</span><span>${s.hi}</span></div></div>`).join('')}
@@ -270,7 +412,8 @@ function openCheckin() {
       <button class="btn primary" id="ci-save">Lưu check-in</button>`);
     const sh = $('#sheet');
     const keepBody = () => { if (!showBody) return; ['weight', 'waist', 'hrv', 'rhr'].forEach(f => { c[f] = num($('#ci-' + f).value); }); };
-    sh.querySelectorAll('[data-sl]').forEach(b => b.addEventListener('click', () => { keepBody(); c.sleepH = clamp(c.sleepH + +b.dataset.sl, 0, 14); draw(); }));
+    ['bed', 'wake'].forEach(f => $('#ci-' + f).addEventListener('change', e => { if (!e.target.value) return; keepBody(); c[f] = e.target.value; calcH(); draw(); }));
+    sh.querySelectorAll('[data-awake]').forEach(b => b.addEventListener('click', () => { keepBody(); c.awake = +b.dataset.awake; calcH(); draw(); }));
     sh.querySelectorAll('[data-scale]').forEach(b => b.addEventListener('click', () => { keepBody(); c[b.dataset.scale] = +b.dataset.v; draw(); }));
     sh.querySelectorAll('[data-tag]').forEach(b => b.addEventListener('click', () => { keepBody(); c.tags[b.dataset.tag] = !c.tags[b.dataset.tag]; draw(); }));
     $('#toggle-body').addEventListener('click', () => { keepBody(); showBody = !showBody; draw(); });
@@ -278,7 +421,7 @@ function openCheckin() {
       keepBody();
       ['weight', 'waist', 'hrv', 'rhr'].forEach(f => { if (c[f] == null) delete c[f]; });
       day(k).checkin = c;
-      if (c.weight) state.settings.weight = c.weight;
+      if (c.weight && k === todayKey()) state.settings.weight = c.weight;
       save(); closeSheet(); render();
       const r = recovery(k);
       showToast(`Hồi phục ${r.score}% — ${advice(r.score).title}`);
