@@ -125,3 +125,13 @@ export async function getMany(paths, concurrency = 8) {
   await Promise.all(Array.from({ length: Math.min(concurrency, paths.length) }, worker));
   return out.filter(Boolean);
 }
+
+export async function delDoc(p) {
+  safe(p);
+  if (usingBlob()) {
+    const { del } = await blob();
+    await del(p);
+    return;
+  }
+  try { await fs.unlink(path.join(DIR(), p)); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+}

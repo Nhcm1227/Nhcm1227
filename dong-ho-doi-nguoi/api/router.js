@@ -15,6 +15,7 @@ import adminClaim from './_routes/admin/claim.js';
 import adminOverview from './_routes/admin/overview.js';
 import adminAction from './_routes/admin/action.js';
 import board from './_routes/board.js';
+import accountDelete from './_routes/account-delete.js';
 
 const ROUTES = {
   'auth/register': register,
@@ -32,6 +33,7 @@ const ROUTES = {
   'admin/overview': adminOverview,
   'admin/action': adminAction,
   'board': board,
+  'account/delete': accountDelete,
 };
 
 export default async function router(req, res) {

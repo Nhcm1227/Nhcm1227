@@ -169,6 +169,21 @@ try {
   r = await client()('/api/board'); assert.equal(r.status, 200); assert.equal(r.json.lifeMe, null);
   step('rời bảng xếp hạng; khách vẫn xem được');
 
+  // ---- Xóa tài khoản ----
+  const z = client();
+  await z('/api/auth/register', { method: 'POST', body: { email: 'xoa@test.vn', password: 'matkhau000' } });
+  await z('/api/board', { method: 'POST', body: { nick: 'Xoa', life: 70 } });
+  r = await z('/api/account/delete', { method: 'POST', body: { password: 'sai' } });
+  assert.equal(r.status, 403);
+  r = await z('/api/account/delete', { method: 'POST', body: { password: 'matkhau000' } });
+  assert.equal(r.json.deleted, true);
+  r = await z('/api/me'); assert.equal(r.json.user, null);
+  r = await z('/api/auth/login', { method: 'POST', body: { email: 'xoa@test.vn', password: 'matkhau000' } });
+  assert.equal(r.status, 401);
+  r = await z('/api/board'); assert.ok(!r.json.life.some((x) => x.nick === 'Xoa'));
+  r = await z('/api/auth/register', { method: 'POST', body: { email: 'xoa@test.vn', password: 'matkhau000' } });
+  assert.equal(r.status, 200); step('xóa tài khoản: cần mật khẩu, xóa sạch, đăng ký lại được');
+
   r = await a('/api/auth/logout', { method: 'POST' });
   r = await a('/api/me'); assert.equal(r.json.user, null); step('đăng xuất');
   console.log('\nTẤT CẢ ĐỀU ĐẠT');

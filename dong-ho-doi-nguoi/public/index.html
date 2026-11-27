@@ -624,6 +624,16 @@ details.ledger[open] summary { color: var(--bone); }
       </details>
     </section>
 
+    <details class="ledger" id="deleteBox" hidden>
+      <summary>Xóa tài khoản</summary>
+      <form class="row" id="deleteForm" novalidate style="padding-block:8px 4px">
+        <input class="line" id="deletePass" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu để xác nhận" aria-label="Mật khẩu xác nhận" style="flex:1 1 200px;min-width:0">
+        <button type="submit" id="deleteBtn">Xóa vĩnh viễn</button>
+      </form>
+      <p class="hint">Xóa hồ sơ, sổ việc, giờ sống và tên trên bảng xếp hạng. Không khôi phục được.</p>
+      <p class="err" id="deleteErr" role="alert" style="color:#ff8a80"></p>
+    </details>
+
     <footer class="footer"><a href="/dieu-khoan">Điều khoản, bảo mật, hoàn tiền</a><span>© Đồng hồ đời người</span></footer>
   </div>
 </main>
@@ -1394,6 +1404,7 @@ details.ledger[open] summary { color: var(--bone); }
     var u = SRV.user;
     $("who").hidden = !u;
     $("whoGuest").hidden = !!u;
+    $("deleteBox").hidden = !u;
     $("who").textContent = u ? (u.name || u.email) : "";
     $("acctBtn").textContent = u ? "Đăng xuất" : "Đăng nhập";
     $("adminLink").hidden = !(u && u.role === "admin");
@@ -1409,6 +1420,20 @@ details.ledger[open] summary { color: var(--bone); }
   });
   renderAccount();
   if (SRV.needUpload) pushSync();
+  $("deleteForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var pw = $("deletePass").value;
+    if (!pw) { $("deleteErr").textContent = "Nhập mật khẩu để xác nhận."; return; }
+    $("deleteBtn").disabled = true;
+    fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ password: pw }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) {
+        $("deleteBtn").disabled = false;
+        if (!x.ok) { $("deleteErr").textContent = x.j.error || "Không xóa được. Thử lại."; return; }
+        try { ["dhdn-cfg2", "dhdn-tasks", "dhdn-bought", "dhdn-owner"].forEach(function (k) { localStorage.removeItem(k); }); } catch (err) {}
+        location.href = "/";
+      }).catch(function () { $("deleteBtn").disabled = false; $("deleteErr").textContent = "Mất kết nối. Thử lại."; });
+  });
 
   // Quay về từ cổng thanh toán
   (function () {
