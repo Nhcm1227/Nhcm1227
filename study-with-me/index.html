@@ -2,208 +2,231 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Study With Me</title>
   <meta name="description" content="Tự quay camera để nhìn mình mà học: Pomodoro, timelapse, nhắc khi rời bàn, âm thanh nền, thống kê.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='none' stroke='%23888' stroke-width='3'/><path d='M16 9v7l4 3' stroke='%23888' stroke-width='3' fill='none' stroke-linecap='round'/></svg>">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z"/><path d="m15 10.5 5-3v9l-5-3"/></symbol>
+    <symbol id="i-mirror" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M8 7 3 12l5 5z"/><path d="m16 7 5 5-5 5z"/></symbol>
+    <symbol id="i-pip" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="6" height="5" rx="1"/></symbol>
+    <symbol id="i-snap" viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.2"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6h14M12 6v13"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><circle cx="9" cy="10" r="5"/><circle cx="15" cy="10" r="5"/><circle cx="12" cy="15" r="5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></symbol>
+    <symbol id="i-skip" viewBox="0 0 24 24"><path d="M6 6l8 6-8 6z"/><path d="M18 6v12"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></symbol>
+    <symbol id="i-keys" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 11h.01M11 11h.01M15 11h.01M8 14.5h8"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></symbol>
+  </defs>
+</svg>
+
 <div class="app" id="app">
   <header class="topbar">
-    <div class="brand">📚 <span>Study With Me</span></div>
-    <div class="today" id="todaySummary">Hôm nay: 0 phút</div>
+    <div class="brand">Study With Me</div>
+    <div class="today" id="todaySummary">Hôm nay 0 phút</div>
     <div class="top-actions">
-      <button class="icon-btn" id="btnTheme" title="Đổi giao diện sáng/tối">🌓</button>
-      <button class="icon-btn" id="btnHelp" title="Phím tắt">⌨️</button>
-      <button class="icon-btn" id="btnFocusMode" title="Chế độ tập trung (F)">⛶</button>
+      <button class="icon-btn" id="btnTheme" title="Sáng / tối" aria-label="Đổi giao diện sáng tối"><svg><use href="#i-theme"/></svg></button>
+      <button class="icon-btn" id="btnHelp" title="Phím tắt" aria-label="Phím tắt"><svg><use href="#i-keys"/></svg></button>
+      <button class="icon-btn" id="btnFocusMode" title="Chế độ tập trung (F)" aria-label="Chế độ tập trung"><svg><use href="#i-expand"/></svg></button>
     </div>
   </header>
 
   <main class="layout">
-    <!-- ======== CAMERA STAGE ======== -->
+    <!-- Camera -->
     <section class="stage-wrap">
       <div class="stage" id="stage">
         <canvas id="stageCanvas" width="1280" height="720"></canvas>
         <video id="cam" playsinline muted autoplay></video>
         <div class="stage-empty" id="stageEmpty">
-          <div class="big">🎥</div>
-          <p>Bật camera để <b>tự nhìn mình mà học</b>.<br>Video chỉ xử lý trên máy bạn, không gửi đi đâu cả.</p>
+          <h1>Nhìn mình.<br>Rồi học.</h1>
+          <p>Camera chỉ chạy trên máy bạn — không ghi lại, không gửi đi.</p>
           <button class="btn primary" id="btnCamStart">Bật camera</button>
           <p class="err" id="camErr"></p>
         </div>
-        <div class="away-banner" id="awayBanner" hidden>👀 Bạn đang rời bàn học… quay lại nào!</div>
-        <div class="rec-dot" id="recDot" hidden>● TIMELAPSE <span id="recInfo"></span></div>
-      </div>
+        <div class="away-banner" id="awayBanner" hidden>Không thấy bạn trước camera</div>
+        <div class="rec-dot" id="recDot" hidden><i></i>Timelapse <span id="recInfo"></span></div>
 
-      <div class="stage-toolbar">
-        <button class="btn" id="btnCamToggle">📷 Tắt cam</button>
-        <select id="camSelect" title="Chọn camera"></select>
-        <button class="btn" id="btnMirror" title="Lật gương (M)">↔️ Gương</button>
-        <select id="filterSelect" title="Bộ lọc">
-          <option value="none">Không lọc</option>
-          <option value="warm">Ấm áp</option>
-          <option value="cool">Mát lạnh</option>
-          <option value="bw">Đen trắng</option>
-          <option value="bright">Sáng hơn</option>
-          <option value="soft">Mềm mịn</option>
-        </select>
-        <button class="btn" id="btnPip" title="Cửa sổ nổi kèm đồng hồ (P)">🪟 Cửa sổ nổi</button>
-        <button class="btn" id="btnSnap" title="Chụp ảnh (S)">📸 Chụp</button>
-        <button class="btn" id="btnOverlay" title="Ẩn/hiện chữ trên video">🅰️ Lớp phủ</button>
+        <div class="dock" role="toolbar" aria-label="Điều khiển camera">
+          <button class="dock-btn" id="btnCamToggle" title="Bật / tắt camera" aria-label="Bật tắt camera"><svg><use href="#i-camera"/></svg></button>
+          <button class="dock-btn" id="btnMirror" title="Lật gương (M)" aria-label="Lật gương"><svg><use href="#i-mirror"/></svg></button>
+          <label class="dock-btn select" title="Bộ lọc">
+            <svg><use href="#i-filter"/></svg>
+            <select id="filterSelect" aria-label="Bộ lọc">
+              <option value="none">Gốc</option>
+              <option value="warm">Ấm</option>
+              <option value="cool">Mát</option>
+              <option value="bw">Đen trắng</option>
+              <option value="bright">Sáng</option>
+              <option value="soft">Mềm</option>
+            </select>
+          </label>
+          <button class="dock-btn" id="btnOverlay" title="Chữ trên video" aria-label="Ẩn hiện chữ trên video"><svg><use href="#i-text"/></svg></button>
+          <span class="dock-sep"></span>
+          <button class="dock-btn" id="btnSnap" title="Chụp ảnh (S)" aria-label="Chụp ảnh"><svg><use href="#i-snap"/></svg></button>
+          <button class="dock-btn" id="btnPip" title="Cửa sổ nổi (P)" aria-label="Cửa sổ nổi"><svg><use href="#i-pip"/></svg></button>
+          <select id="camSelect" class="dock-cam" title="Chọn camera" aria-label="Chọn camera"></select>
+        </div>
       </div>
     </section>
 
-    <!-- ======== SIDE PANEL ======== -->
+    <!-- Side -->
     <aside class="side">
-      <!-- Timer -->
-      <div class="card timer-card">
-        <div class="tabs" id="modeTabs">
+      <section class="card timer-card">
+        <div class="segmented" id="modeTabs">
           <button data-mode="focus" class="active">Tập trung</button>
           <button data-mode="short">Nghỉ ngắn</button>
           <button data-mode="long">Nghỉ dài</button>
           <button data-mode="free">Bấm giờ</button>
         </div>
         <div class="timer" id="timerDisplay">25:00</div>
+        <div class="timer-sub" id="timerSub">Phiên 1</div>
         <div class="progress"><div id="progressBar"></div></div>
-        <div class="timer-sub" id="timerSub">Phiên #1 · Sẵn sàng</div>
         <div class="timer-actions">
-          <button class="btn primary big" id="btnStart">▶ Bắt đầu</button>
-          <button class="btn" id="btnReset" title="Đặt lại">↺</button>
-          <button class="btn" id="btnSkip" title="Bỏ qua">⏭</button>
+          <button class="round-btn" id="btnReset" title="Đặt lại (R)" aria-label="Đặt lại"><svg><use href="#i-reset"/></svg></button>
+          <button class="play-btn" id="btnStart" aria-label="Bắt đầu"><svg><use href="#i-play"/></svg></button>
+          <button class="round-btn" id="btnSkip" title="Bỏ qua" aria-label="Bỏ qua"><svg><use href="#i-skip"/></svg></button>
         </div>
         <div class="presets">
-          <span>Mẫu:</span>
-          <button class="chip" data-preset="25,5,15">25/5</button>
-          <button class="chip" data-preset="50,10,20">50/10</button>
-          <button class="chip" data-preset="90,20,30">90/20</button>
+          <button class="chip" data-preset="25,5,15">25 · 5</button>
+          <button class="chip" data-preset="50,10,20">50 · 10</button>
+          <button class="chip" data-preset="90,20,30">90 · 20</button>
           <button class="chip" id="btnCustom">Tuỳ chỉnh</button>
         </div>
-      </div>
+      </section>
 
-      <!-- Panels -->
-      <div class="card">
-        <div class="tabs small" id="panelTabs">
-          <button data-panel="tasks" class="active">✅ Việc</button>
-          <button data-panel="sounds">🎧 Âm</button>
-          <button data-panel="record">🎞️ Quay</button>
-          <button data-panel="stats">📊 Số liệu</button>
-          <button data-panel="settings">⚙️</button>
-        </div>
+      <section class="card">
+        <nav class="tabs" id="panelTabs">
+          <button data-panel="tasks" class="active">Việc</button>
+          <button data-panel="sounds">Âm thanh</button>
+          <button data-panel="record">Timelapse</button>
+          <button data-panel="stats">Thống kê</button>
+          <button data-panel="settings">Cài đặt</button>
+        </nav>
 
-        <!-- Tasks -->
         <div class="panel" data-panel="tasks">
-          <form id="taskForm" class="row">
-            <input id="taskInput" placeholder="Hôm nay học gì? (Enter để thêm)" maxlength="80" autocomplete="off">
-            <input id="taskEst" type="number" min="1" max="20" value="1" title="Số pomodoro dự kiến" class="num">
-            <button class="btn primary">+</button>
+          <form id="taskForm" class="task-form">
+            <input id="taskInput" placeholder="Thêm việc cần làm" maxlength="80" autocomplete="off">
+            <input id="taskEst" type="number" min="1" max="20" value="1" title="Số phiên dự kiến" aria-label="Số phiên dự kiến" class="num">
+            <button class="icon-btn filled" aria-label="Thêm"><svg><use href="#i-plus"/></svg></button>
           </form>
           <ul class="tasks" id="taskList"></ul>
-          <div class="muted small-text">Bấm vào nhiệm vụ để chọn làm việc hiện tại — nó sẽ hiện trên video.</div>
-          <button class="link" id="btnClearDone">Xoá việc đã xong</button>
-        </div>
-
-        <!-- Sounds -->
-        <div class="panel" data-panel="sounds" hidden>
-          <p class="muted small-text">Âm thanh nền tạo trực tiếp trong trình duyệt — không cần tải.</p>
-          <div id="soundList" class="sounds"></div>
-          <label class="check"><input type="checkbox" id="soundsOnlyFocus"> Chỉ phát khi đang tập trung</label>
-        </div>
-
-        <!-- Record -->
-        <div class="panel" data-panel="record" hidden>
-          <p class="muted small-text">Ghi lại cả buổi học thành video tua nhanh (giống các video "study with me timelapse"). Đồng hồ và nhiệm vụ được in lên khung hình.</p>
-          <label class="field">Chụp 1 khung mỗi
-            <select id="tlInterval">
-              <option value="1">1 giây</option>
-              <option value="2">2 giây</option>
-              <option value="5" selected>5 giây</option>
-              <option value="10">10 giây</option>
-            </select>
-          </label>
-          <label class="check"><input type="checkbox" id="tlAuto" checked> Tự ghi khi bắt đầu phiên tập trung</label>
-          <div class="row">
-            <button class="btn primary" id="btnTl">● Bắt đầu ghi</button>
-            <button class="btn" id="btnTlExport" disabled>⬇ Xuất video</button>
-            <button class="btn" id="btnTlClear" disabled>🗑</button>
+          <div class="foot">
+            <span class="muted">Chạm vào một việc để hiện nó trên video.</span>
+            <button class="link" id="btnClearDone">Xoá việc đã xong</button>
           </div>
-          <div class="muted small-text" id="tlStatus">Chưa có khung hình nào.</div>
+        </div>
+
+        <div class="panel" data-panel="sounds" hidden>
+          <div id="soundList" class="list"></div>
+          <label class="row-switch"><span>Chỉ phát khi đang tập trung</span><input type="checkbox" class="switch" id="soundsOnlyFocus"></label>
+        </div>
+
+        <div class="panel" data-panel="record" hidden>
+          <p class="muted">Ghi lại buổi học thành một video tua nhanh, kèm đồng hồ trên khung hình.</p>
+          <div class="list">
+            <label class="row-switch"><span>Chụp mỗi</span>
+              <select id="tlInterval">
+                <option value="1">1 giây</option><option value="2">2 giây</option>
+                <option value="5" selected>5 giây</option><option value="10">10 giây</option>
+              </select>
+            </label>
+            <label class="row-switch"><span>Tự ghi khi bắt đầu tập trung</span><input type="checkbox" class="switch" id="tlAuto"></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" id="btnTl">Bắt đầu ghi</button>
+            <button class="btn" id="btnTlExport" disabled>Xuất video</button>
+            <button class="btn icon-only" id="btnTlClear" disabled aria-label="Xoá khung hình"><svg><use href="#i-trash"/></svg></button>
+          </div>
+          <p class="muted" id="tlStatus">Chưa có khung hình nào.</p>
           <div class="gallery" id="gallery"></div>
         </div>
 
-        <!-- Stats -->
         <div class="panel" data-panel="stats" hidden>
           <div class="stat-grid">
             <div class="stat"><b id="stToday">0</b><span>phút hôm nay</span></div>
-            <div class="stat"><b id="stSessions">0</b><span>phiên hôm nay</span></div>
-            <div class="stat"><b id="stStreak">0</b><span>ngày liên tiếp 🔥</span></div>
+            <div class="stat"><b id="stSessions">0</b><span>phiên</span></div>
+            <div class="stat"><b id="stStreak">0</b><span>ngày liên tiếp</span></div>
             <div class="stat"><b id="stAway">0</b><span>lần rời bàn</span></div>
           </div>
           <div class="goal">
-            <div class="row between"><span>Mục tiêu ngày</span><span id="goalText">0 / 120 phút</span></div>
+            <div class="goal-head"><span>Mục tiêu ngày</span><span class="muted" id="goalText">0 / 120 phút</span></div>
             <div class="progress"><div id="goalBar"></div></div>
           </div>
           <div class="chart" id="weekChart"></div>
           <button class="link" id="btnExportStats">Tải lịch sử (CSV)</button>
         </div>
 
-        <!-- Settings -->
-        <div class="panel" data-panel="settings" hidden>
-          <div class="grid2">
-            <label class="field">Tập trung (phút)<input type="number" id="setFocus" min="1" max="180"></label>
-            <label class="field">Nghỉ ngắn<input type="number" id="setShort" min="1" max="60"></label>
-            <label class="field">Nghỉ dài<input type="number" id="setLong" min="1" max="90"></label>
-            <label class="field">Nghỉ dài sau<input type="number" id="setLongEvery" min="2" max="10"></label>
-            <label class="field">Mục tiêu ngày (phút)<input type="number" id="setGoal" min="10" max="900" step="10"></label>
-            <label class="field">Âm báo<select id="setChime">
-              <option value="bell">Chuông</option><option value="soft">Nhẹ</option><option value="off">Tắt</option>
-            </select></label>
+        <div class="panel settings" data-panel="settings" hidden>
+          <h4>Hẹn giờ</h4>
+          <div class="list">
+            <label class="row-switch"><span>Tập trung (phút)</span><input type="number" id="setFocus" min="1" max="180"></label>
+            <label class="row-switch"><span>Nghỉ ngắn</span><input type="number" id="setShort" min="1" max="60"></label>
+            <label class="row-switch"><span>Nghỉ dài</span><input type="number" id="setLong" min="1" max="90"></label>
+            <label class="row-switch"><span>Nghỉ dài sau (phiên)</span><input type="number" id="setLongEvery" min="2" max="10"></label>
+            <label class="row-switch"><span>Mục tiêu ngày (phút)</span><input type="number" id="setGoal" min="10" max="900" step="10"></label>
+            <label class="row-switch"><span>Âm báo</span><select id="setChime"><option value="bell">Chuông</option><option value="soft">Nhẹ</option><option value="off">Tắt</option></select></label>
+            <label class="row-switch"><span>Tự bắt đầu giờ nghỉ</span><input type="checkbox" class="switch" id="setAutoBreak"></label>
+            <label class="row-switch"><span>Tự bắt đầu phiên sau nghỉ</span><input type="checkbox" class="switch" id="setAutoFocus"></label>
+            <label class="row-switch"><span>Thông báo trên máy</span><input type="checkbox" class="switch" id="setNotify"></label>
           </div>
-          <label class="check"><input type="checkbox" id="setAutoBreak"> Tự bắt đầu giờ nghỉ</label>
-          <label class="check"><input type="checkbox" id="setAutoFocus"> Tự bắt đầu phiên tập trung sau nghỉ</label>
-          <label class="check"><input type="checkbox" id="setNotify"> Thông báo trên máy khi hết giờ</label>
-          <hr>
-          <h4>👀 Nhắc khi rời bàn</h4>
-          <p class="muted small-text">Dùng camera để nhận biết khi không thấy mặt bạn. Chạy hoàn toàn trên máy.</p>
-          <label class="check"><input type="checkbox" id="setAway"> Bật nhận diện rời bàn</label>
-          <label class="field">Báo sau (giây)<input type="number" id="setAwaySec" min="5" max="300"></label>
-          <label class="check"><input type="checkbox" id="setAwayPause"> Tự tạm dừng đồng hồ khi rời bàn</label>
-          <div class="muted small-text" id="awayStatus">Đang tắt.</div>
-          <hr>
-          <h4>🪞 Lớp phủ trên video</h4>
-          <label class="check"><input type="checkbox" id="setOvTimer"> Đồng hồ đếm ngược</label>
-          <label class="check"><input type="checkbox" id="setOvClock"> Giờ hiện tại</label>
-          <label class="check"><input type="checkbox" id="setOvTask"> Nhiệm vụ đang làm</label>
-          <label class="check"><input type="checkbox" id="setOvQuote"> Câu động lực</label>
-          <label class="check"><input type="checkbox" id="setOvPosture"> Nhắc ngồi thẳng / uống nước mỗi 20 phút</label>
-          <hr>
+
+          <h4>Nhắc khi rời bàn</h4>
+          <div class="list">
+            <label class="row-switch"><span>Nhận diện khuôn mặt</span><input type="checkbox" class="switch" id="setAway"></label>
+            <label class="row-switch"><span>Báo sau (giây)</span><input type="number" id="setAwaySec" min="5" max="300"></label>
+            <label class="row-switch"><span>Tự tạm dừng đồng hồ</span><input type="checkbox" class="switch" id="setAwayPause"></label>
+          </div>
+          <p class="muted" id="awayStatus">Đang tắt.</p>
+
+          <h4>Chữ trên video</h4>
+          <div class="list">
+            <label class="row-switch"><span>Đồng hồ đếm ngược</span><input type="checkbox" class="switch" id="setOvTimer"></label>
+            <label class="row-switch"><span>Giờ hiện tại</span><input type="checkbox" class="switch" id="setOvClock"></label>
+            <label class="row-switch"><span>Việc đang làm</span><input type="checkbox" class="switch" id="setOvTask"></label>
+            <label class="row-switch"><span>Câu động lực</span><input type="checkbox" class="switch" id="setOvQuote"></label>
+            <label class="row-switch"><span>Nhắc nghỉ mắt mỗi 20 phút</span><input type="checkbox" class="switch" id="setOvPosture"></label>
+          </div>
           <button class="link danger" id="btnResetAll">Xoá toàn bộ dữ liệu</button>
         </div>
-      </div>
+      </section>
     </aside>
   </main>
 </div>
 
-<!-- Dialogs -->
 <dialog id="helpDlg">
-  <h3>⌨️ Phím tắt</h3>
-  <table>
-    <tr><td><kbd>Space</kbd></td><td>Bắt đầu / tạm dừng</td></tr>
-    <tr><td><kbd>R</kbd></td><td>Đặt lại đồng hồ</td></tr>
-    <tr><td><kbd>M</kbd></td><td>Lật gương camera</td></tr>
-    <tr><td><kbd>P</kbd></td><td>Cửa sổ nổi (nhìn mình khi dùng app khác)</td></tr>
-    <tr><td><kbd>S</kbd></td><td>Chụp ảnh</td></tr>
-    <tr><td><kbd>F</kbd></td><td>Chế độ tập trung toàn màn hình</td></tr>
-    <tr><td><kbd>N</kbd></td><td>Thêm nhiệm vụ</td></tr>
-  </table>
-  <form method="dialog"><button class="btn primary">Đóng</button></form>
+  <h3>Phím tắt</h3>
+  <dl class="keys">
+    <dt><kbd>Space</kbd></dt><dd>Bắt đầu / tạm dừng</dd>
+    <dt><kbd>R</kbd></dt><dd>Đặt lại</dd>
+    <dt><kbd>M</kbd></dt><dd>Lật gương</dd>
+    <dt><kbd>P</kbd></dt><dd>Cửa sổ nổi</dd>
+    <dt><kbd>S</kbd></dt><dd>Chụp ảnh</dd>
+    <dt><kbd>F</kbd></dt><dd>Chế độ tập trung</dd>
+    <dt><kbd>N</kbd></dt><dd>Thêm việc</dd>
+  </dl>
+  <form method="dialog"><button class="btn primary wide">Xong</button></form>
 </dialog>
 
 <dialog id="doneDlg">
-  <h3 id="doneTitle">🎉 Xong một phiên!</h3>
-  <p id="doneText"></p>
   <img id="doneSnap" alt="Ảnh lúc kết thúc phiên">
-  <form method="dialog" class="row"><button class="btn primary">Tiếp tục</button></form>
+  <h3 id="doneTitle">Xong một phiên.</h3>
+  <p id="doneText" class="muted"></p>
+  <form method="dialog"><button class="btn primary wide">Tiếp tục</button></form>
 </dialog>
 
 <div class="toast" id="toast" hidden></div>

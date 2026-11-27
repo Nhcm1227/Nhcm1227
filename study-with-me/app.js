@@ -135,8 +135,8 @@
       const cr = loopSrc(a, 'crackle'); const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1200;
       cr.connect(hp).connect(out); return [base, cr];
     } },
-    { id: 'brown', icon: '🟤', name: 'Ồn nâu (tập trung sâu)', build: (a, out) => { const s = loopSrc(a, 'brown'); s.connect(out); return [s]; } },
-    { id: 'white', icon: '⚪', name: 'Ồn trắng / quạt', build: (a, out) => {
+    { id: 'brown', icon: '🟤', name: 'Ồn nâu', build: (a, out) => { const s = loopSrc(a, 'brown'); s.connect(out); return [s]; } },
+    { id: 'white', icon: '⚪', name: 'Ồn trắng', build: (a, out) => {
       const s = loopSrc(a, 'white'); const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3000;
       s.connect(lp).connect(out); return [s];
     } },
@@ -150,10 +150,11 @@
     const wrap = $('#soundList'); wrap.innerHTML = '';
     for (const snd of SOUNDS) {
       const st = (soundState[snd.id] ||= { on: false, vol: 0.5 });
-      const row = document.createElement('div'); row.className = 'sound';
-      row.innerHTML = `<button class="btn ${st.on ? 'on' : ''}" title="Bật/tắt">${snd.icon}</button>
-        <span>${snd.name}</span><input type="range" min="0" max="1" step="0.01" value="${st.vol}" aria-label="Âm lượng ${snd.name}">`;
-      row.querySelector('button').onclick = () => { st.on = !st.on; syncSound(snd); renderSounds(); };
+      const row = document.createElement('div'); row.className = 'sound' + (st.on ? ' on' : '');
+      row.innerHTML = `<span class="s-name">${snd.name}</span>
+        <input type="range" min="0" max="1" step="0.01" value="${st.vol}" aria-label="Âm lượng ${snd.name}">
+        <input type="checkbox" class="switch" ${st.on ? 'checked' : ''} aria-label="Bật ${snd.name}">`;
+      row.querySelector('.switch').onchange = () => { st.on = !st.on; syncSound(snd); renderSounds(); };
       row.querySelector('input').oninput = (e) => { st.vol = +e.target.value; if (st.gain) st.gain.gain.value = st.vol; };
       wrap.appendChild(row);
     }
@@ -235,13 +236,13 @@
       if (t) { t.done_p = (t.done_p || 0) + 1; renderTasks(); }
       save(true);
       showDone();
-      notify('🎉 Xong phiên tập trung!', `Nghỉ ngơi ${db.cycle % S.longEvery === 0 ? S.long : S.short} phút nhé.`);
+      notify('Xong phiên tập trung', `Nghỉ ngơi ${db.cycle % S.longEvery === 0 ? S.long : S.short} phút nhé.`);
       if (tl.recording) tlCapture(true);
       const next = db.cycle % S.longEvery === 0 ? 'long' : 'short';
       setMode(next, S.autoBreak);
     } else {
-      notify('⏰ Hết giờ nghỉ', 'Quay lại học thôi!');
-      toast('⏰ Hết giờ nghỉ — quay lại học thôi!');
+      notify('Hết giờ nghỉ', 'Quay lại học thôi.');
+      toast('Hết giờ nghỉ. Quay lại học thôi.');
       setMode('focus', S.autoFocus);
     }
     renderStats();
@@ -252,14 +253,16 @@
     $('#timerDisplay').textContent = fmt(shown);
     const pct = timer.mode === 'free' ? ((timer.elapsed % 3600) / 3600) * 100 : (1 - timer.remaining / timer.total) * 100;
     $('#progressBar').style.width = pct + '%';
-    $('#btnStart').textContent = timer.running ? '❚❚ Tạm dừng' : (shown !== timer.total && timer.mode !== 'free') || timer.elapsed ? '▶ Tiếp tục' : '▶ Bắt đầu';
+    const sb = $('#btnStart');
+    sb.querySelector('use').setAttribute('href', timer.running ? '#i-pause' : '#i-play');
+    sb.setAttribute('aria-label', timer.running ? 'Tạm dừng' : 'Bắt đầu');
     const n = (db.cycle % S.longEvery) + 1;
-    let sub = timer.mode === 'focus' ? `Phiên #${today().sessions + 1} · ${n}/${S.longEvery} trước nghỉ dài` : MODE_LABEL[timer.mode];
-    if (timer.pausedByAway) sub = '⏸ Tạm dừng vì bạn rời bàn';
+    let sub = timer.mode === 'focus' ? `Phiên ${today().sessions + 1} · ${n} trên ${S.longEvery} trước nghỉ dài` : MODE_LABEL[timer.mode];
+    if (timer.pausedByAway) sub = 'Tạm dừng vì bạn rời bàn';
     $('#timerSub').textContent = sub;
     document.title = timer.running ? `${fmt(shown)} · ${MODE_LABEL[timer.mode]}` : 'Study With Me';
     $('#stage').classList.toggle('running', timer.running);
-    $('#todaySummary').textContent = `Hôm nay: ${Math.floor(today().sec / 60)} phút · ${today().sessions} phiên`;
+    $('#todaySummary').textContent = `Hôm nay ${Math.floor(today().sec / 60)} phút · ${today().sessions} phiên`;
   }
 
   $$('#modeTabs button').forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
@@ -274,7 +277,7 @@
     const [f, s, l] = b.dataset.preset.split(',').map(Number);
     Object.assign(S, { focus: f, short: s, long: l }); save(); fillSettings(); markPreset();
     if (!timer.running) setMode(timer.mode === 'free' ? 'focus' : timer.mode);
-    toast(`Đã chọn ${f} phút học / ${s} phút nghỉ`);
+    toast(`${f} phút học, ${s} phút nghỉ`);
   }));
   $('#btnCustom').onclick = () => { showPanel('settings'); $('#setFocus').focus(); };
   function markPreset() {
@@ -288,7 +291,7 @@
 
   // nhắc ngồi thẳng / quy tắc 20-20-20 cho mắt
   let postureAcc = 0, postureMsgUntil = 0;
-  const POSTURE_MSGS = ['🧍 Ngồi thẳng lưng nào!', '💧 Uống một ngụm nước', '👁️ Nhìn xa 6m trong 20 giây (quy tắc 20-20-20)', '😌 Thả lỏng vai, hít thở sâu'];
+  const POSTURE_MSGS = ['Ngồi thẳng lưng', 'Uống một ngụm nước', 'Nhìn xa 6 mét trong 20 giây', 'Thả lỏng vai, hít thở sâu'];
   let postureIdx = 0, postureText = '';
   function postureTick(dt) {
     if (!S.ovPosture) return;
@@ -302,13 +305,13 @@
   // ---------- tasks ----------
   function renderTasks() {
     const ul = $('#taskList'); ul.innerHTML = '';
-    if (!db.tasks.length) { ul.innerHTML = '<li class="muted" style="cursor:default">Chưa có nhiệm vụ nào. Thêm một việc nhỏ, cụ thể để bắt đầu 💡</li>'; }
+    if (!db.tasks.length) { ul.innerHTML = '<li class="empty">Chưa có việc nào. Bắt đầu với một việc nhỏ và cụ thể.</li>'; }
     for (const t of db.tasks) {
       const li = document.createElement('li');
       li.className = (t.done ? 'done ' : '') + (db.currentTask === t.id ? 'current' : '');
       li.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Hoàn thành">
-        <span class="t-name"></span><span class="t-count">🍅 ${t.done_p || 0}/${t.est || 1}</span>
-        <button class="t-del" title="Xoá">✕</button>`;
+        <span class="t-name"></span><span class="t-count">${t.done_p || 0}/${t.est || 1}</span>
+        <button class="t-del" title="Xoá" aria-label="Xoá"><svg><use href="#i-x"/></svg></button>`;
       li.querySelector('.t-name').textContent = t.name;
       li.querySelector('input').onclick = (e) => {
         e.stopPropagation(); t.done = e.target.checked;
@@ -351,7 +354,7 @@
       });
       cam.video.srcObject = cam.stream; await cam.video.play();
       $('#stageEmpty').hidden = true;
-      $('#btnCamToggle').textContent = '📷 Tắt cam';
+      $('#btnCamToggle').classList.add('on');
       await listCams();
       if (S.away) awayStart();
     } catch (err) {
@@ -364,7 +367,7 @@
   function camStop(showEmpty = true) {
     cam.stream?.getTracks().forEach((t) => t.stop());
     cam.stream = null; cam.video.srcObject = null;
-    if (showEmpty) { $('#stageEmpty').hidden = false; $('#btnCamToggle').textContent = '📷 Bật cam'; }
+    if (showEmpty) { $('#stageEmpty').hidden = false; $('#btnCamToggle').classList.remove('on'); }
   }
   async function listCams() {
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput');
@@ -398,7 +401,7 @@
   const QUOTES = [
     'Không cần hoàn hảo, chỉ cần bắt đầu.', 'Mỗi phiên nhỏ là một bước lớn.', 'Kỷ luật là cầu nối giữa mục tiêu và thành tựu.',
     'Hôm nay cố gắng, ngày mai nhẹ nhàng.', 'Tập trung vào quá trình, kết quả sẽ tới.', 'Bạn của tương lai sẽ cảm ơn bạn hôm nay.',
-    'Đừng đếm thời gian, hãy làm cho thời gian đáng giá.', 'Chậm mà chắc vẫn hơn đứng yên.', 'Học thêm một chút nữa thôi 💪',
+    'Đừng đếm thời gian, hãy làm cho thời gian đáng giá.', 'Chậm mà chắc vẫn hơn đứng yên.', 'Học thêm một chút nữa thôi.',
     'Thành công là tổng của những nỗ lực nhỏ lặp lại mỗi ngày.',
   ];
   let quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
@@ -419,57 +422,65 @@
     }
     ctx.restore();
 
-    if (away.isAway) { ctx.fillStyle = 'rgba(255,60,80,.18)'; ctx.fillRect(0, 0, W, H); }
+    if (away.isAway) { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, H); }
     if (!S.overlay) return;
 
-    const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#ff7a59';
+    const F = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Inter, "Segoe UI", Roboto, sans-serif';
+    const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#0a84ff';
     ctx.textBaseline = 'alphabetic';
-    ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 8;
 
-    // top-left: clock
+    // lớp tối mờ ở trên và dưới để chữ luôn dễ đọc
+    let g = ctx.createLinearGradient(0, H - 300, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)');
+    ctx.fillStyle = g; ctx.fillRect(0, H - 300, W, 300);
+    g = ctx.createLinearGradient(0, 0, 0, 160);
+    g.addColorStop(0, 'rgba(0,0,0,.4)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, 160);
+
+    // trên trái: giờ hiện tại
     if (S.ovClock) {
       const d = new Date();
-      ctx.fillStyle = '#fff'; ctx.font = '600 44px system-ui, sans-serif';
-      ctx.fillText(`${pad(d.getHours())}:${pad(d.getMinutes())}`, 36, 72);
-      ctx.font = '400 20px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.85)';
-      ctx.fillText(d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' }), 38, 100);
+      ctx.fillStyle = '#fff'; ctx.font = `500 26px ${F}`;
+      const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      ctx.fillText(t, 48, 66);
+      const tw = ctx.measureText(t).width;
+      ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = `400 22px ${F}`;
+      ctx.fillText(d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' }), 48 + tw + 14, 66);
     }
 
-    // bottom-left: timer card
-    if (S.ovTimer) {
-      const shown = timer.mode === 'free' ? timer.elapsed : timer.remaining;
-      const task = S.ovTask ? currentTaskName() : '';
-      const cw = 420, ch = task ? 190 : 156, cx = 32, cy = H - ch - 32;
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = 'rgba(10,12,16,.55)'; roundRect(cx, cy, cw, ch, 22); ctx.fill();
-      ctx.fillStyle = accent; ctx.font = '600 20px system-ui, sans-serif';
-      ctx.fillText((timer.running ? '● ' : '❚❚ ') + MODE_LABEL[timer.mode].toUpperCase(), cx + 24, cy + 38);
-      ctx.fillStyle = '#fff'; ctx.font = '700 84px system-ui, sans-serif';
-      ctx.fillText(fmt(shown), cx + 20, cy + 118);
-      const pct = timer.mode === 'free' ? 0 : 1 - timer.remaining / timer.total;
-      ctx.fillStyle = 'rgba(255,255,255,.2)'; roundRect(cx + 24, cy + 134, cw - 48, 6, 3); ctx.fill();
-      ctx.fillStyle = accent; roundRect(cx + 24, cy + 134, (cw - 48) * pct, 6, 3); ctx.fill();
-      if (task) {
-        ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = '500 20px system-ui, sans-serif';
-        let txt = '📌 ' + task; while (ctx.measureText(txt).width > cw - 48 && txt.length > 4) txt = txt.slice(0, -2) + '…';
-        ctx.fillText(txt, cx + 24, cy + 172);
-      }
-      ctx.shadowBlur = 8;
-    }
-
-    // bottom-right: quote / posture reminder
-    const msg = Date.now() < postureMsgUntil ? postureText : S.ovQuote ? quote : '';
+    // trên phải: câu động lực / lời nhắc
+    const reminding = Date.now() < postureMsgUntil;
+    const msg = reminding ? postureText : S.ovQuote ? quote : '';
     if (msg) {
-      ctx.font = (Date.now() < postureMsgUntil ? '600 26px' : 'italic 400 22px') + ' system-ui, sans-serif';
-      ctx.fillStyle = '#fff'; ctx.textAlign = 'right';
-      ctx.fillText(msg, W - 36, H - 44);
+      ctx.font = `${reminding ? 500 : 400} 22px ${F}`;
+      ctx.fillStyle = reminding ? '#fff' : 'rgba(255,255,255,.75)'; ctx.textAlign = 'right';
+      ctx.fillText(msg, W - 48, tl.recording ? 108 : 66);
       ctx.textAlign = 'left';
     }
 
-    // top-right: today total
-    ctx.font = '500 20px system-ui, sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.textAlign = 'right';
-    ctx.fillText(`Hôm nay ${Math.floor(today().sec / 60)}′ · 🍅 ${today().sessions}`, W - 36, tl.recording ? 84 : 52);
-    ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+    // dưới trái: đồng hồ đếm ngược
+    if (S.ovTimer) {
+      const shown = timer.mode === 'free' ? timer.elapsed : timer.remaining;
+      const task = S.ovTask ? currentTaskName() : '';
+      const x = 48, base = H - (task ? 86 : 52);
+      ctx.fillStyle = timer.running ? accent : 'rgba(255,255,255,.6)';
+      ctx.beginPath(); ctx.arc(x + 6, base - 128, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = `500 20px ${F}`;
+      ctx.fillText(MODE_LABEL[timer.mode] + (timer.running ? '' : ' · tạm dừng'), x + 22, base - 121);
+      ctx.fillStyle = '#fff'; ctx.font = `200 120px ${F}`;
+      ctx.fillText(fmt(shown), x - 6, base);
+      if (timer.mode !== 'free') {
+        const bw = 360, pct = 1 - timer.remaining / timer.total;
+        ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(x, base + 20, bw, 3);
+        ctx.fillStyle = '#fff'; ctx.fillRect(x, base + 20, bw * pct, 3);
+      }
+      if (task) {
+        ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = `400 22px ${F}`;
+        let txt = task; while (ctx.measureText(txt).width > 520 && txt.length > 4) txt = txt.slice(0, -2) + '…';
+        if (txt !== task && !txt.endsWith('…')) txt += '…';
+        ctx.fillText(txt, x, base + 58);
+      }
+    }
   }
 
   // Bộ đếm nhịp chạy trong Web Worker để không bị trình duyệt làm chậm khi chuyển tab
@@ -493,7 +504,7 @@
       if (!pv.srcObject) pv.srcObject = canvas.captureStream(15);
       await pv.play();
       await pv.requestPictureInPicture();
-      toast('Cửa sổ nổi đã bật — bạn vẫn thấy mình khi mở app khác.');
+      toast('Cửa sổ nổi đã bật. Bạn vẫn thấy mình khi mở app khác.');
     } catch (e) { toast('Trình duyệt chưa hỗ trợ cửa sổ nổi (thử Chrome/Edge).'); }
   };
 
@@ -502,7 +513,7 @@
     const url = canvas.toDataURL('image/jpeg', 0.9);
     if (download) {
       const a = document.createElement('a'); a.href = url; a.download = `study-${dayKey()}-${Date.now()}.jpg`; a.click();
-      toast('📸 Đã lưu ảnh');
+      toast('Đã lưu ảnh');
     }
     return url;
   }
@@ -510,7 +521,7 @@
 
   function showDone() {
     const min = S.focus;
-    $('#doneTitle').textContent = '🎉 Xong một phiên!';
+    $('#doneTitle').textContent = 'Xong một phiên.';
     $('#doneText').textContent = `Bạn vừa tập trung ${min} phút. Hôm nay tổng cộng ${Math.floor(today().sec / 60)} phút. Đây là bạn lúc này — đứng dậy vươn vai nhé!`;
     const img = $('#doneSnap');
     if (cam.stream) { img.src = snapshot(false); img.style.display = 'block'; } else img.style.display = 'none';
@@ -523,7 +534,7 @@
   const tlCtx = tlCanvas.getContext('2d');
   function tlStart() {
     if (!cam.stream) { toast('Bật camera trước khi ghi timelapse'); return; }
-    tl.recording = true; tl.last = 0; updateTlUI(); toast('● Bắt đầu ghi timelapse');
+    tl.recording = true; tl.last = 0; updateTlUI(); toast('Đang ghi timelapse');
   }
   function tlStop() { tl.recording = false; updateTlUI(); }
   function tlCapture(force = false) {
@@ -538,7 +549,7 @@
   }
   function updateTlUI() {
     const n = tl.frames.length;
-    $('#btnTl').textContent = tl.recording ? '■ Dừng ghi' : '● Bắt đầu ghi';
+    $('#btnTl').textContent = tl.recording ? 'Dừng ghi' : 'Bắt đầu ghi';
     $('#btnTlExport').disabled = !n || tl.recording; $('#btnTlClear').disabled = !n;
     const secs = (n / 30).toFixed(1);
     $('#tlStatus').textContent = n ? `${n} khung hình · video ~${secs}s (30 khung/giây)${tl.recording && !timer.running ? ' · chỉ ghi khi đồng hồ chạy' : ''}` : 'Chưa có khung hình nào.';
@@ -577,7 +588,7 @@
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `study-timelapse-${dayKey()}.${ext}`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
-    updateTlUI(); toast('⬇ Đã xuất video timelapse!');
+    updateTlUI(); toast('Đã xuất video timelapse');
     // vài ảnh xem trước
     const g = $('#gallery'); g.innerHTML = '';
     const step = Math.max(1, Math.floor(tl.frames.length / 6));
@@ -607,12 +618,12 @@
         away.kind = 'mediapipe';
       }
       away.lastSeen = Date.now();
-      $('#awayStatus').textContent = '✅ Đang theo dõi. Thấy bạn rồi 👋';
+      $('#awayStatus').textContent = 'Đang theo dõi — đã thấy bạn.';
     } catch (e) {
       console.warn(e);
       away.kind = 'motion';
       away.detector = 'motion';
-      $('#awayStatus').textContent = 'Không tải được bộ nhận diện mặt — dùng chế độ phát hiện chuyển động thay thế.';
+      $('#awayStatus').textContent = 'Không tải được bộ nhận diện khuôn mặt, đang dùng phát hiện chuyển động thay thế.';
     }
     away.loading = false;
   }
@@ -655,10 +666,10 @@
         chime('soft');
         if (S.awayPause) { pause(); timer.pausedByAway = true; updateTimerUI(); }
       }
-      $('#awayStatus').textContent = '⚠️ Không thấy bạn trước camera.';
+      $('#awayStatus').textContent = 'Không thấy bạn trước camera.';
     } else {
-      if (timer.pausedByAway) { start(); toast('👋 Chào mừng quay lại! Tiếp tục nhé.'); }
-      if (S.away) $('#awayStatus').textContent = '✅ Đang theo dõi. Thấy bạn rồi 👋';
+      if (timer.pausedByAway) { start(); toast('Chào mừng quay lại. Tiếp tục nhé.'); }
+      if (S.away) $('#awayStatus').textContent = 'Đang theo dõi — đã thấy bạn.';
     }
   }
 
@@ -685,7 +696,7 @@
   let goalCelebrated = false;
   setInterval(() => {
     renderStats();
-    if (!goalCelebrated && today().sec / 60 >= S.goal) { goalCelebrated = true; chime(); toast(`🏆 Đạt mục tiêu ${S.goal} phút hôm nay!`, 5000); }
+    if (!goalCelebrated && today().sec / 60 >= S.goal) { goalCelebrated = true; chime(); toast(`Đã đạt mục tiêu ${S.goal} phút hôm nay`, 5000); }
   }, 15000);
   goalCelebrated = today().sec / 60 >= S.goal;
   $('#btnExportStats').onclick = () => {
