@@ -1,7 +1,7 @@
 // VNPAY gọi vào đây (IPN) để báo kết quả giao dịch. Luôn trả HTTP 200 với RspCode.
-import { handle, allow, query, ok } from '../_lib/http.js';
-import { getDoc } from '../_lib/store.js';
-import { providers, vnpVerify, orderPath, markPaid, markStatus } from '../_lib/pay.js';
+import { handle, allow, query, ok } from '../../_lib/http.js';
+import { getDoc } from '../../_lib/store.js';
+import { providers, vnpVerify, orderPath, markPaid, markStatus } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'GET', 'POST');

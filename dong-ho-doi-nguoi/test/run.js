@@ -145,6 +145,30 @@ try {
   assert.equal(r.status, 403); step('khóa tài khoản: đá ra và không đăng nhập lại được');
   r = await c('/api/admin/overview'); assert.equal(r.status, 401);
 
+  // ---- Bảng xếp hạng ----
+  r = await a('/api/board', { method: 'POST', body: { nick: 'x', life: 74 } });
+  assert.equal(r.status, 400);
+  r = await a('/api/board', { method: 'POST', body: { nick: 'Minh <b>', life: 74.44 } });
+  assert.equal(r.json.joined, true);
+  const d2 = client();
+  await d2('/api/auth/register', { method: 'POST', body: { email: 'thu@test.vn', password: 'matkhau789' } });
+  await d2('/api/data', { method: 'PUT', body: { cfg: {}, tasks: [{ id: 'a', t: 'x', done: true, doneAt: Date.now() }], bought: [{ id: 'run', h: 7, at: Date.now() }, { id: 'run', h: 9999, at: Date.now() }] } });
+  r = await d2('/api/board', { method: 'POST', body: { nick: 'Thu', life: 999 } });
+  r = await d2('/api/board');
+  assert.equal(r.json.total, 2);
+  assert.deepEqual(r.json.life.map((x) => [x.nick, x.value]), [['Thu', 105], ['Minh b', 74.4]]);
+  assert.equal(r.json.hours[0].nick, 'Thu'); assert.equal(r.json.hours[0].value, 14);
+  assert.equal(r.json.done[0].value, 1); assert.equal(r.json.lifeMe.rank, 1); assert.equal(r.json.life[0].me, true);
+  step('bảng xếp hạng: lọc tên, chặn số ảo, xếp đúng thứ tự');
+  r = await a('/api/data', { method: 'PUT', body: { cfg: {}, tasks: [], bought: [], life: 106 } });
+  r = await a('/api/board');
+  assert.equal(r.json.lifeMe.rank, 1); assert.equal(r.json.lifeMe.value, 105);
+  step('đồng bộ dữ liệu tự cập nhật bảng xếp hạng');
+  r = await d2('/api/board', { method: 'POST', body: { leave: true } });
+  r = await d2('/api/board'); assert.equal(r.json.total, 1); assert.equal(r.json.joined, false);
+  r = await client()('/api/board'); assert.equal(r.status, 200); assert.equal(r.json.lifeMe, null);
+  step('rời bảng xếp hạng; khách vẫn xem được');
+
   r = await a('/api/auth/logout', { method: 'POST' });
   r = await a('/api/me'); assert.equal(r.json.user, null); step('đăng xuất');
   console.log('\nTẤT CẢ ĐỀU ĐẠT');

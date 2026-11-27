@@ -1,6 +1,6 @@
-import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../_lib/http.js';
-import { getDoc, updateDoc } from '../_lib/store.js';
-import { normEmail, emailPath, userPath, checkPassword, hashPassword, setSession, publicUser } from '../_lib/auth.js';
+import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../../_lib/http.js';
+import { getDoc, updateDoc } from '../../_lib/store.js';
+import { normEmail, emailPath, userPath, checkPassword, hashPassword, setSession, publicUser } from '../../_lib/auth.js';
 
 const BAD = 'Email hoặc mật khẩu không đúng.';
 

@@ -1,8 +1,8 @@
 // Trang web hỏi lại trạng thái đơn sau khi người dùng quay về từ cổng thanh toán.
-import { handle, allow, query, ok, HttpError } from '../_lib/http.js';
-import { getDoc } from '../_lib/store.js';
-import { requireUser, publicUser, userPath } from '../_lib/auth.js';
-import { providers, payos, orderPath, markPaid, markStatus } from '../_lib/pay.js';
+import { handle, allow, query, ok, HttpError } from '../../_lib/http.js';
+import { getDoc } from '../../_lib/store.js';
+import { requireUser, publicUser, userPath } from '../../_lib/auth.js';
+import { providers, payos, orderPath, markPaid, markStatus } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'GET');

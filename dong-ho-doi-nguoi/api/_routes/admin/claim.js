@@ -1,8 +1,8 @@
 // Người đầu tiên nhập đúng mã ADMIN_CLAIM_CODE sẽ thành quản trị viên. Chỉ dùng được một lần.
 import crypto from 'node:crypto';
-import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../_lib/http.js';
-import { putDoc, updateDoc, Conflict } from '../_lib/store.js';
-import { requireUser, userPath, publicUser } from '../_lib/auth.js';
+import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../../_lib/http.js';
+import { putDoc, updateDoc, Conflict } from '../../_lib/store.js';
+import { requireUser, userPath, publicUser } from '../../_lib/auth.js';
 
 export default handle(async (req, res) => {
   allow(req, 'POST');

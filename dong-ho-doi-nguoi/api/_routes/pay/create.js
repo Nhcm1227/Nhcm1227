@@ -1,8 +1,8 @@
-import { handle, allow, sameOrigin, readJson, ok, HttpError, originOf, clientIp } from '../_lib/http.js';
-import { putDoc } from '../_lib/store.js';
-import { requireUser } from '../_lib/auth.js';
-import { PRICE, PACKS } from '../_lib/plan.js';
-import { providers, payos, vnpayCheckoutUrl, newOrderCode, orderPath, markStatus } from '../_lib/pay.js';
+import { handle, allow, sameOrigin, readJson, ok, HttpError, originOf, clientIp } from '../../_lib/http.js';
+import { putDoc } from '../../_lib/store.js';
+import { requireUser } from '../../_lib/auth.js';
+import { PRICE, PACKS } from '../../_lib/plan.js';
+import { providers, payos, vnpayCheckoutUrl, newOrderCode, orderPath, markStatus } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'POST');

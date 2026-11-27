@@ -6,6 +6,12 @@
 <title>Đồng Hồ Đời Người</title>
 <meta name="description" content="Đếm ngược những ngày còn lại, dự báo tuổi thọ từ thói quen và bệnh tật, kèm sổ việc có báo động hạn chót.">
 <meta name="theme-color" content="#0F0D0C">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Đồng hồ">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230F0D0C'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23E8E1D3' stroke-width='2'/%3E%3Cpath d='M16 9v8l5 3' stroke='%23D21A12' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,13 +45,14 @@ body {
   font-family: var(--f-body); font-size: 17px; line-height: 1.6;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 110px;
+  padding-block: 0 calc(96px + env(safe-area-inset-bottom, 0px));
   overflow-x: hidden;
 }
 ::selection { background: var(--blood); color: var(--bone); }
-.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 84px; position: relative; z-index: 2; }
+.wrap { max-width: 980px; margin: 0 auto; position: relative; z-index: 2; }
+.panel { display: flex; flex-direction: column; gap: 52px; }
 h1, h2, h3 { margin: 0; font-weight: 700; text-wrap: balance; }
-h2 { font-family: var(--f-goth); font-size: clamp(2.4rem, 7vw, 4rem); line-height: .95; letter-spacing: .005em; }
+h2 { font-family: var(--f-goth); font-size: clamp(1.9rem, 6vw, 2.8rem); line-height: .95; letter-spacing: .005em; }
 p { margin: 0; }
 .label { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); }
 .lede { color: var(--bone-dim); max-width: 60ch; font-style: italic; }
@@ -85,7 +92,7 @@ button[aria-pressed="true"], .btn-blood { background: var(--blood); border-color
 .hero .label { color: var(--blood-hi); }
 .days {
   font-family: var(--f-goth); font-weight: 900; line-height: .78;
-  font-size: clamp(6rem, 25vw, 17rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  font-size: clamp(5.5rem, 24vw, 13rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums;
   color: var(--bone); text-shadow: 0 0 60px var(--blood-glow);
   overflow-wrap: anywhere;
 }
@@ -281,6 +288,53 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
 @media (prefers-reduced-motion: reduce) {
   .hero .label, .days.glitch, .alarm { animation: none; }
 }
+/* ---------- app shell ---------- */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 31; background: var(--void); }
+.appbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 14px 10px; background: var(--void); }
+.appbar h1 { font-family: var(--f-goth); font-size: 2.2rem; line-height: 1; font-weight: 900; }
+.iconbtn { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+.iconbtn svg { width: 22px; height: 22px; }
+.planbar { max-width: 980px; margin: 0 auto 26px; }
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 120px)); justify-content: center;
+  padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));
+  background: rgba(15, 13, 12, .94); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--rust);
+}
+.tabbar button { border: none; background: none; min-height: 52px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--bone-dim); font-family: var(--f-mono); font-size: .66rem; letter-spacing: .04em; text-transform: none; }
+.tabbar button:hover { color: var(--bone); }
+.tabbar svg { width: 24px; height: 24px; }
+.tabbar button[aria-selected="true"] { color: var(--blood-hi); }
+.acct { gap: 16px; }
+.acct-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid var(--rust); padding: 16px; }
+.acct-id { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.acct-id .who { font-size: 1rem; color: var(--bone); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.install { border: 1px dashed var(--rust); padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.rank-me { border: 1px solid var(--rust); padding: 20px; gap: 6px; }
+.rank-big { display: flex; align-items: baseline; gap: 10px; }
+.rank-big b { font-family: var(--f-goth); font-size: 4.2rem; line-height: .9; font-weight: 900; }
+.rank-big span { color: var(--bone-dim); font-style: italic; }
+#vsAvg b { font-family: var(--f-mono); font-weight: 600; }
+#vsAvg .up { color: var(--moss); } #vsAvg .down { color: var(--blood-hi); }
+.seg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg3 button { padding: 10px 6px; font-size: .7rem; letter-spacing: .06em; }
+.seg3 button + button { border-left: none; }
+.seg3 button[aria-pressed="true"] { background: var(--bone); color: var(--void); border-color: var(--bone); }
+.board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.board li { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--rust); }
+.board li.empty { display: block; color: var(--bone-dim); font-style: italic; }
+.board .rk { font-family: var(--f-goth); font-size: 1.5rem; line-height: 1; color: var(--bone-dim); text-align: center; }
+.board li:nth-child(1) .rk { color: #D9A441; } .board li:nth-child(2) .rk { color: #C9C3B8; } .board li:nth-child(3) .rk { color: #B07A4A; }
+.board .nk { overflow-wrap: anywhere; }
+.board .vl { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.board li.me { background: rgba(168, 18, 12, .16); }
+.board li.me .nk::after { content: "  (bạn)"; color: var(--bone-dim); font-style: italic; }
+.joinbox form input { flex: 1 1 180px; min-width: 0; }
+.joinbox .err { color: #ff8a80; font-size: .9rem; min-height: 1.2em; }
+details.ledger summary { cursor: pointer; font-family: var(--f-mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); padding: 12px 0; }
+details.ledger[open] summary { color: var(--bone); }
+
 /* ---------- account & checkout ---------- */
 .btnlink { font-family: var(--f-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bone); border: 1px solid var(--rust); padding: 10px 16px; text-decoration: none; }
 .btnlink:hover { border-color: var(--blood-hi); color: #fff; }
@@ -306,7 +360,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
 .paymethods button:disabled { opacity: .45; cursor: not-allowed; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(16px + env(safe-area-inset-top, 0px)); z-index: 90; background: var(--bone); color: var(--void); padding: 12px 18px; font-family: var(--f-mono); font-size: .85rem; max-width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 .toast.bad { background: var(--blood-hi); color: #fff; }
-.footer { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); }
+.footer { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; font-family: var(--f-mono); font-size: .75rem; color: var(--bone-dim); }
 .footer a { color: var(--bone-dim); }
 </style>
 </head>
@@ -315,24 +369,15 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
 <canvas id="grain" aria-hidden="true"></canvas>
 <div class="vignette" aria-hidden="true"></div>
 
-<div class="wrap">
-  <div class="head-block">
-    <div class="planbar" id="planbar"><span id="planText">Đang tải gói...</span><button id="planBtn" type="button">Xem gói</button></div>
-    <header class="top">
-      <div class="brand">Đồng hồ <span>đời người</span></div>
-      <div class="top-actions">
-        <button id="heartBtn" type="button" aria-pressed="false">Nghe nhịp tim</button>
-        <button id="jumpTasks" type="button">Sổ việc</button>
-        <button id="jumpMarket" type="button">Mua giờ sống</button>
-        <button id="jumpForm" type="button">Khai hồ sơ</button>
-        <a id="adminLink" class="btnlink" href="/admin" hidden>Quản trị</a>
-        <span class="who" id="who" hidden></span>
-        <button id="acctBtn" type="button">Đăng nhập</button>
-      </div>
-    </header>
-  </div>
+<header class="appbar">
+  <h1 id="tabTitle">Đồng hồ</h1>
+  <button id="heartBtn" class="iconbtn" type="button" aria-pressed="false" aria-label="Nghe nhịp tim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M3 12h4l1.5-3 3 6 1.5-3h8"/></svg></button>
+</header>
+<div class="planbar" id="planbar"><span id="planText">Đang tải gói...</span><button id="planBtn" type="button">Xem gói</button></div>
 
-  <section class="hero">
+<main class="wrap">
+  <div class="panel" id="tab-dong-ho" role="tabpanel" aria-labelledby="nav-dong-ho">
+    <section class="hero">
     <p class="label">Thời gian còn lại của bạn</p>
     <div class="days" id="bigDays">0</div>
     <p class="days-unit">ngày. Rồi hết.</p>
@@ -346,9 +391,8 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     <p class="pulse-line">Tim bạn còn đập khoảng <b id="beats">0</b> lần nữa. Hôm nay chỉ còn <b id="todayLeft">0 giờ</b>.</p>
   </section>
 
-  <section>
-    <p class="label">Văn bản số 01: dự báo</p>
-    <article class="cert" aria-label="Giấy báo tử dự kiến">
+    <section>
+      <article class="cert" aria-label="Giấy báo tử dự kiến">
       <div class="cert-inner">
         <div class="cert-head">
           <span class="gov">Sổ đăng ký những ngày còn lại</span>
@@ -367,13 +411,31 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
       </div>
       <div class="stamp" id="stamp">Chưa<br>quá muộn</div>
     </article>
-  </section>
+    </section>
 
-  <section id="tasksSec">
-    <p class="label">Văn bản số 02: sổ việc</p>
-    <h2>Việc phải xong, trước khi quá muộn</h2>
-    <p class="lede">Ghi việc và hạn chót. Đến hạn mà chưa xong, trang sẽ báo động. Trước hạn 10 phút, nó nhắc bạn một lần.</p>
-    <div class="tracker">
+    <section>
+      <h2>Bạn còn bao nhiêu lần nữa?</h2>
+      <div class="counts" id="counts"></div>
+    </section>
+    <section>
+      <h2>Đời bạn tính bằng tuần</h2>
+      <p class="lede">Mỗi hàng là một năm. Dấu × là tuần đã qua, ô đỏ là tuần này, dấu chấm là tuần còn lại.</p>
+      <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
+    <div class="legend"><span>× đã qua: <b id="wPast">0</b></span><span class="red">■ tuần này</span><span>· còn lại: <b id="wLeft">0</b></span></div>
+    </section>
+
+    <section class="epitaph">
+      <blockquote id="quoteText"></blockquote>
+      <cite id="quoteBy"></cite>
+      <button id="nextQuote" type="button">Câu khác</button>
+      <p class="hint">Bạn đã ở đây <b id="onPage">0 giây</b>. Chúng sẽ không quay lại.</p>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-viec" role="tabpanel" aria-labelledby="nav-viec" hidden>
+    <section id="tasksSec">
+      <p class="lede">Ghi việc kèm hạn chót. Đến hạn mà chưa xong, app báo động. Trước hạn 10 phút, app nhắc một lần.</p>
+      <div class="tracker">
       <div class="side" style="gap:14px">
         <form class="addform" id="addForm" autocomplete="off">
           <div class="field"><label for="newTitle">Việc cần làm</label><input class="line" id="newTitle" type="text" maxlength="140" placeholder="Ví dụ: gọi điện cho mẹ" required></div>
@@ -409,13 +471,13 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
         </div>
       </div>
     </div>
-  </section>
+    </section>
+  </div>
 
-  <section id="marketSec">
-    <p class="label">Văn bản số 03: chợ giờ sống</p>
-    <h2>Mua thêm giờ sống</h2>
-    <p class="lede">Không ai bán giờ sống bằng tiền. Ở đây bạn trả bằng mồ hôi. Mỗi lần làm một việc tốt cho cơ thể, bấm Mua và số giờ được cộng thẳng vào đồng hồ. Mỗi điếu thuốc, mỗi ly rượu thì ngược lại: bạn đang bán đi giờ sống của mình.</p>
-    <div class="market">
+  <div class="panel" id="tab-gio" role="tabpanel" aria-labelledby="nav-gio" hidden>
+    <section id="marketSec">
+      <p class="lede">Làm việc tốt cho cơ thể thì bấm Mua: giờ sống được cộng thẳng vào đồng hồ. Thuốc lá, rượu bia thì bị trừ.</p>
+      <div class="market">
       <div class="wares" id="wares"></div>
       <div class="side">
         <div class="balance">
@@ -430,13 +492,87 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
         <p class="note-box">Số giờ là mức trung bình rút ra từ các nghiên cứu lớn, áp dụng cho cả một quần thể, không phải lời hứa cho riêng ai. Mỗi mục có giới hạn trong ngày vì cơ thể không cộng dồn vô hạn.</p>
       </div>
     </div>
-  </section>
+    </section>
+  </div>
 
-  <section id="formSec">
-    <p class="label">Văn bản số 04: tờ khai</p>
-    <h2>Khai thật. Cái chết không nghe lời nói dối.</h2>
-    <p class="lede" id="sampleNote">Đang dùng hồ sơ mẫu (nam, sinh 01/01/2000). Sửa từng ô bên dưới, mọi con số trên trang sẽ đổi theo ngay. Dữ liệu chỉ nằm trong trình duyệt của bạn.</p>
-    <div class="form">
+  <div class="panel" id="tab-hang" role="tabpanel" aria-labelledby="nav-hang" hidden>
+    <section class="rank-me" id="rankMe">
+      <span class="label">Tuổi thọ dự báo của bạn</span>
+      <div class="rank-big"><b class="mono" id="myLife">0</b><span>tuổi</span></div>
+      <p id="vsAvg">...</p>
+      <p class="hint" id="myRank"></p>
+    </section>
+
+    <section>
+      <div class="seg3" role="group" aria-label="Chọn bảng">
+        <button type="button" data-board="life" aria-pressed="true">Sống lâu nhất</button>
+        <button type="button" data-board="hours" aria-pressed="false">Mua giờ tuần này</button>
+        <button type="button" data-board="done" aria-pressed="false">Chăm nhất tuần</button>
+      </div>
+      <p class="hint" id="boardHint">Xếp theo tuổi thọ dự báo từ hồ sơ sức khỏe.</p>
+      <ol class="board" id="boardList"><li class="empty">Đang tải bảng xếp hạng...</li></ol>
+    </section>
+
+    <section class="joinbox" id="joinBox">
+      <h2 id="joinTitle">Lên bảng xếp hạng</h2>
+      <p class="hint">Bảng chỉ hiện tên hiển thị và con số cuối cùng. Không ai thấy bệnh, cân nặng hay thói quen của bạn.</p>
+      <form class="row" id="joinForm" novalidate>
+        <input class="line" id="joinNick" type="text" maxlength="24" placeholder="Tên hiển thị" aria-label="Tên hiển thị" autocomplete="nickname">
+        <button type="submit" class="btn-blood" id="joinBtn">Tham gia</button>
+        <button type="button" id="leaveBtn" hidden>Rời bảng</button>
+      </form>
+      <p class="err" id="joinErr" role="alert"></p>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-toi" role="tabpanel" aria-labelledby="nav-toi" hidden>
+    <section class="acct">
+      <div class="acct-row">
+        <div class="acct-id"><span class="label">Tài khoản</span><span class="who" id="who" hidden></span><span class="hint" id="whoGuest">Chưa đăng nhập. Dữ liệu chỉ nằm trên máy này.</span></div>
+        <div class="row"><a id="adminLink" class="btnlink" href="/admin" hidden>Quản trị</a><button id="acctBtn" type="button">Đăng nhập</button></div>
+      </div>
+      <div class="install" id="installBox" hidden>
+        <p id="installText">Cài Đồng hồ đời người lên màn hình chính để mở như một app.</p>
+        <button type="button" class="btn-blood" id="installBtn" hidden>Cài app</button>
+      </div>
+    </section>
+
+    <section id="planSec">
+      <h2>Gói Người Sống</h2>
+      <p class="lede">Tài khoản mới được dùng đủ tính năng 3 ngày. Sau đó 24.000đ mỗi tháng, trả bằng mã QR ngân hàng hoặc thẻ Visa / Mastercard qua cổng thanh toán bên thứ ba.</p>
+      <div class="plans">
+      <div class="plan">
+        <span class="pname">Miễn phí</span>
+        <span class="price">0đ <small>/ mãi mãi</small></span>
+        <ul>
+          <li>Đồng hồ đếm ngược và giấy báo tử</li>
+          <li>Tính tuổi thọ theo thói quen và bệnh</li>
+          <li>Sổ việc tối đa 3 việc chưa xong</li>
+          <li class="no">Báo động khi đến hạn chót</li>
+          <li class="no">Nhắc trước hạn 10 phút</li>
+          <li class="no">Không giới hạn số việc</li>
+        </ul>
+      </div>
+      <div class="plan pro">
+        <span class="pname">Người Sống</span>
+        <span class="price">24.000đ <small>/ tháng</small></span>
+        <ul>
+          <li>Tất cả của gói miễn phí</li>
+          <li>Không giới hạn số việc</li>
+          <li>Báo động khi đến hạn chót</li>
+          <li>Nhắc trước hạn 10 phút</li>
+          <li>Thông báo trên máy khi được cho phép</li>
+        </ul>
+        <span class="status" id="planStatus"></span>
+        <button type="button" class="btn-blood" id="subBtn">Mua gói Người Sống</button>
+      </div>
+    </div>
+    </section>
+
+    <section id="formSec">
+      <h2>Hồ sơ sức khỏe</h2>
+      <p class="lede" id="sampleNote">Đang dùng hồ sơ mẫu (nam, sinh 01/01/2000). Sửa từng ô, đồng hồ đổi theo ngay.</p>
+      <div class="form">
       <div class="field"><label for="birth">Ngày sinh</label><input id="birth" type="date"></div>
       <div class="field">
         <span class="flabel" id="sexLbl">Giới tính</span>
@@ -477,74 +613,28 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
       <div class="ills" id="ills"></div>
     </div>
     <p class="note-box">Đây là ước tính thống kê từ các nghiên cứu dịch tễ lớn, không phải chẩn đoán. Hai người cùng hồ sơ vẫn có thể sống chênh nhau vài chục năm. Nếu bạn có bệnh, con số đúng nhất là con số bác sĩ của bạn nói.</p>
-  </section>
-
-  <section>
-    <p class="label">Văn bản số 05: biên bản tính toán</p>
-    <h2>Từng năm được cộng, từng năm bị lấy đi</h2>
-    <p class="lede">Bắt đầu từ tuổi thọ trung bình của người Việt cùng giới tính, rồi cộng trừ theo thói quen và bệnh của bạn. Nhiều bệnh cùng lúc không cộng dồn hết, vì chúng thường chồng lên nhau: bệnh nặng nhất tính đủ, các bệnh sau giảm dần.</p>
-    <div class="ledger-wrap">
+      <details class="ledger">
+        <summary>Xem cách tính tuổi thọ</summary>
+        <div class="ledger-wrap">
       <table>
         <thead><tr><th>Yếu tố</th><th>Của bạn</th><th style="text-align:right">Năm</th><th>Căn cứ</th></tr></thead>
         <tbody id="ledger"></tbody>
       </table>
     </div>
-  </section>
+      </details>
+    </section>
 
-  <section>
-    <p class="label">Văn bản số 06: kiểm kê</p>
-    <h2>Bạn còn bao nhiêu lần nữa?</h2>
-    <div class="counts" id="counts"></div>
-  </section>
+    <footer class="footer"><a href="/dieu-khoan">Điều khoản, bảo mật, hoàn tiền</a><span>© Đồng hồ đời người</span></footer>
+  </div>
+</main>
 
-  <section>
-    <p class="label">Văn bản số 07: sổ tuần</p>
-    <h2>Mỗi dấu gạch là một tuần đã chôn</h2>
-    <p class="lede">Mỗi hàng là một năm, mỗi ký hiệu là một tuần. Dấu × là tuần đã qua. Ô đỏ là tuần này. Dấu chấm là những tuần bạn vẫn còn, nếu dự báo đúng.</p>
-    <canvas id="weeks" role="img" aria-label="Lưới các tuần trong đời"></canvas>
-    <div class="legend"><span>× đã qua: <b id="wPast">0</b></span><span class="red">■ tuần này</span><span>· còn lại: <b id="wLeft">0</b></span></div>
-  </section>
-
-  <section id="planSec">
-    <p class="label">Văn bản số 08: gia hạn</p>
-    <h2>Gia hạn kỷ luật, không gia hạn được tuổi thọ</h2>
-    <p class="lede">Tạo tài khoản là được dùng đầy đủ 3 ngày miễn phí. Sau đó chọn ở lại gói miễn phí, hoặc trả 24.000đ mỗi tháng, rẻ hơn một ly trà sữa. Thanh toán bằng mã QR ngân hàng hoặc thẻ Visa / Mastercard qua cổng thanh toán bên thứ ba. Trang này không bao giờ thấy số thẻ của bạn.</p>
-    <div class="plans">
-      <div class="plan">
-        <span class="pname">Miễn phí</span>
-        <span class="price">0đ <small>/ mãi mãi</small></span>
-        <ul>
-          <li>Đồng hồ đếm ngược và giấy báo tử</li>
-          <li>Tính tuổi thọ theo thói quen và bệnh</li>
-          <li>Sổ việc tối đa 3 việc chưa xong</li>
-          <li class="no">Báo động khi đến hạn chót</li>
-          <li class="no">Nhắc trước hạn 10 phút</li>
-          <li class="no">Không giới hạn số việc</li>
-        </ul>
-      </div>
-      <div class="plan pro">
-        <span class="pname">Người Sống</span>
-        <span class="price">24.000đ <small>/ tháng</small></span>
-        <ul>
-          <li>Tất cả của gói miễn phí</li>
-          <li>Không giới hạn số việc</li>
-          <li>Báo động khi đến hạn chót</li>
-          <li>Nhắc trước hạn 10 phút</li>
-          <li>Thông báo trên máy khi được cho phép</li>
-        </ul>
-        <span class="status" id="planStatus"></span>
-        <button type="button" class="btn-blood" id="subBtn">Mua gói Người Sống</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="epitaph">
-    <p class="label">Văn bia</p>
-    <blockquote id="quoteText"></blockquote>
-    <cite id="quoteBy"></cite>
-    <button id="nextQuote" type="button">Đọc bia khác</button>
-  </section>
-</div>
+<nav class="tabbar" role="tablist" aria-label="Các mục">
+  <button type="button" role="tab" id="nav-dong-ho" data-tab="dong-ho" aria-controls="tab-dong-ho" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><span>Đồng hồ</span></button>
+  <button type="button" role="tab" id="nav-viec" data-tab="viec" aria-controls="tab-viec" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L6.8 5M3.5 12l1.2 1.2L6.8 11M3.5 18l1.2 1.2L6.8 17"/></svg><span>Việc</span></button>
+  <button type="button" role="tab" id="nav-gio" data-tab="gio" aria-controls="tab-gio" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M12 9.5v5M9.5 12h5"/></svg><span>Mua giờ</span></button>
+  <button type="button" role="tab" id="nav-hang" data-tab="hang" aria-controls="tab-hang" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M5 20v-6h4v6M10 20V8h4v12M15 20v-9h4v9"/></svg><span>Xếp hạng</span></button>
+  <button type="button" role="tab" id="nav-toi" data-tab="toi" aria-controls="tab-toi" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.2-4 4.3-6 8-6s6.8 2 8 6"/></svg><span>Tôi</span></button>
+</nav>
 
 <div class="overlay" id="payModal" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="payTitle">
@@ -596,9 +686,6 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   </div>
 </div>
 
-<footer class="footer" style="position:relative;z-index:2;margin-top:60px"><a href="/dieu-khoan">Điều khoản, bảo mật, hoàn tiền</a><span>© Đồng hồ đời người</span></footer>
-
-<div class="wasted">Bạn đã tiêu <b id="onPage">0 giây</b> trên trang này. Chúng sẽ không quay lại.</div>
 
 <script type="text/plain" id="appScript">
 (function () {
@@ -614,7 +701,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   var SYNC_KEYS = { "dhdn-cfg2": 1, "dhdn-tasks": 1, "dhdn-bought": 1 };
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} if (SYNC_KEYS[k]) queueSync(); }
   var syncTimer = null;
-  function syncBody() { return JSON.stringify({ cfg: load("dhdn-cfg2", {}), tasks: load("dhdn-tasks", []), bought: load("dhdn-bought", []) }); }
+  function syncBody() { return JSON.stringify({ cfg: load("dhdn-cfg2", {}), tasks: load("dhdn-tasks", []), bought: load("dhdn-bought", []), life: result ? Math.round(result.total * 10) / 10 : undefined }); }
   function queueSync() {
     if (!SRV.user) return;
     clearTimeout(syncTimer);
@@ -708,9 +795,12 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
       commit();
     });
   });
-  function jump(id, focus) { $(id).scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); if (focus) $(focus).focus({ preventScroll: true }); }
-  $("jumpForm").addEventListener("click", function () { jump("formSec", "birth"); });
-  $("jumpTasks").addEventListener("click", function () { jump("tasksSec", "newTitle"); });
+  function panelOf(el) { while (el && !(el.classList && el.classList.contains("panel"))) el = el.parentNode; return el; }
+  function jump(id, focus) {
+    var p = panelOf($(id)); if (p) showTab(p.id.slice(4));
+    $(id).scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+    if (focus) $(focus).focus({ preventScroll: true });
+  }
   function commit() { save("dhdn-cfg2", cfg); recompute(); }
 
   // ================= CHỢ GIỜ SỐNG =================
@@ -764,7 +854,6 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     bought = bought.filter(function (x) { return String(x.at) !== at; }); save("dhdn-bought", bought);
     renderMarket(); recompute();
   });
-  $("jumpMarket").addEventListener("click", function () { jump("marketSec"); });
 
   function recompute() {
     result = compute(cfg);
@@ -855,7 +944,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   // ================= SỔ TUẦN =================
   var canvas = $("weeks"), ctx = canvas.getContext("2d"), phase = 0;
   function drawWeeks() {
-    if (!result) return;
+    if (!result || $("tab-dong-ho").hidden) return;
     var cs = getComputedStyle(document.documentElement);
     var bone = cs.getPropertyValue("--bone-dim").trim(), blood = cs.getPropertyValue("--blood-hi").trim(), faint = cs.getPropertyValue("--rust").trim();
     var years = Math.ceil(result.total), cols = 52, labelW = 24;
@@ -907,6 +996,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     var st = planState();
     var bar = $("planbar");
     bar.classList.toggle("expired", st.kind === "free");
+    bar.hidden = st.kind === "paid" && st.left >= 3 * DAY;
     if (st.kind === "trial") {
       $("planText").innerHTML = "Dùng thử miễn phí: còn <b>" + dur(st.left) + "</b>";
       $("planBtn").textContent = "Đăng ký 24.000đ/tháng";
@@ -916,7 +1006,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
       $("planBtn").textContent = st.left < 3 * DAY ? "Gia hạn" : "Xem gói";
       $("planStatus").textContent = "Đang hoạt động đến " + dstr(new Date(Date.now() + st.left)) + ".";
     } else if (st.kind === "guest") {
-      $("planText").innerHTML = "Bạn đang dùng thử không cần tài khoản. <b>Tạo tài khoản</b> để được 3 ngày dùng đủ tính năng và giữ dữ liệu trên mọi máy.";
+      $("planText").innerHTML = "<b>Tạo tài khoản</b> để dùng đủ tính năng 3 ngày miễn phí.";
       $("planBtn").textContent = "Tạo tài khoản";
       $("planStatus").textContent = "Tạo tài khoản để bắt đầu 3 ngày dùng thử.";
     } else {
@@ -1140,6 +1230,118 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   var opened = Date.now();
   function onPage() { var s = Math.floor((Date.now() - opened) / 1000); $("onPage").textContent = s < 60 ? s + " giây" : Math.floor(s / 60) + " phút " + (s % 60) + " giây"; }
 
+  // ================= BẢNG XẾP HẠNG =================
+  var board = null, boardKey = "life";
+  var BOARD_HINT = {
+    life: "Xếp theo tuổi thọ dự báo từ hồ sơ sức khỏe.",
+    hours: "Xếp theo số giờ sống mua được trong Chợ giờ sống từ thứ Hai tuần này.",
+    done: "Xếp theo số việc đã làm xong trong sổ việc từ thứ Hai tuần này."
+  };
+  function boardValue(key, v) {
+    if (key === "life") return fmt(v, 1) + " tuổi";
+    if (key === "hours") return hstr(v);
+    return v + " việc";
+  }
+  function renderMyLife() {
+    if (!result) return;
+    var base = BASE[cfg.sex] || BASE.m, diff = result.total - base;
+    $("myLife").textContent = fmt(result.total, 1);
+    $("vsAvg").innerHTML = Math.abs(diff) < 0.05
+      ? "Bằng đúng tuổi thọ trung bình của người Việt cùng giới."
+      : '<b class="' + (diff > 0 ? "up" : "down") + '">' + (diff > 0 ? "+" : "−") + fmt(Math.abs(diff), 1) + " năm</b> " +
+        (diff > 0 ? "so với trung bình người Việt cùng giới (" : "so với trung bình người Việt cùng giới (") + fmt(base, 1) + " tuổi).";
+  }
+  function renderBoard() {
+    renderMyLife();
+    document.querySelectorAll(".seg3 [data-board]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.board === boardKey)); });
+    $("boardHint").textContent = BOARD_HINT[boardKey];
+    if (!board) return;
+    var rows = board[boardKey] || [];
+    $("boardList").innerHTML = rows.length ? rows.map(function (r) {
+      return '<li class="' + (r.me ? "me" : "") + '"><span class="rk">' + r.rank + '</span><span class="nk">' + esc(r.nick) + '</span><span class="vl">' + boardValue(boardKey, r.value) + "</span></li>";
+    }).join("") : '<li class="empty">Chưa có ai trên bảng. Hãy là người đầu tiên.</li>';
+    var me = board[boardKey + "Me"];
+    $("myRank").textContent = board.joined && me
+      ? "Bạn đứng thứ " + me.rank + " trên " + board.total + " người ở bảng này."
+      : board.total ? board.total + " người đang trên bảng xếp hạng." : "";
+    $("joinTitle").textContent = board.joined ? "Bạn đang trên bảng" : "Lên bảng xếp hạng";
+    $("joinBtn").textContent = board.joined ? "Đổi tên" : "Tham gia";
+    $("leaveBtn").hidden = !board.joined;
+    if (!$("joinNick").value) $("joinNick").value = board.nick || "";
+  }
+  function loadBoard() {
+    renderMyLife();
+    fetch("/api/board", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { board = j; renderBoard(); })
+      .catch(function () { $("boardList").innerHTML = '<li class="empty">Không tải được bảng xếp hạng. Kiểm tra mạng rồi mở lại mục này.</li>'; });
+  }
+  document.querySelector(".seg3").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-board]"); if (!b) return;
+    boardKey = b.dataset.board; renderBoard();
+  });
+  function boardPost(body) {
+    return fetch("/api/board", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+  }
+  $("joinForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!SRV.user) { openAuth("reg", "Tạo tài khoản để lên bảng xếp hạng."); return; }
+    var nick = $("joinNick").value.trim();
+    if (nick.length < 2) { $("joinErr").textContent = "Tên hiển thị cần ít nhất 2 ký tự."; return; }
+    $("joinErr").textContent = ""; $("joinBtn").disabled = true;
+    pushSync().then(function () { return boardPost({ nick: nick, life: Math.round(result.total * 10) / 10 }); })
+      .then(function (x) {
+        $("joinBtn").disabled = false;
+        if (!x.ok) { $("joinErr").textContent = x.j.error || "Không thành công. Thử lại."; return; }
+        toast("Đã lên bảng xếp hạng."); loadBoard();
+      }).catch(function () { $("joinBtn").disabled = false; $("joinErr").textContent = "Mất kết nối. Thử lại."; });
+  });
+  $("leaveBtn").addEventListener("click", function () {
+    boardPost({ leave: true }).then(function () { toast("Đã rời bảng xếp hạng."); loadBoard(); });
+  });
+
+  // ================= CÁC MỤC (THANH DƯỚI) =================
+  var TABS = { "dong-ho": "Đồng hồ", "viec": "Việc phải làm", "gio": "Mua giờ sống", "hang": "Xếp hạng", "toi": "Tôi" };
+  function showTab(name, keepScroll) {
+    if (!TABS[name]) name = "dong-ho";
+    Object.keys(TABS).forEach(function (k) {
+      $("tab-" + k).hidden = k !== name;
+      $("nav-" + k).setAttribute("aria-selected", String(k === name));
+    });
+    $("tabTitle").textContent = TABS[name];
+    if (location.hash.slice(1) !== name) { try { history.replaceState(null, "", "#" + name); } catch (e) {} }
+    if (!keepScroll) window.scrollTo(0, 0);
+    if (name === "dong-ho") drawWeeks();
+    if (name === "hang") loadBoard();
+  }
+  document.querySelector(".tabbar").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]"); if (b) showTab(b.dataset.tab);
+  });
+  window.addEventListener("hashchange", function () { showTab(location.hash.slice(1), true); });
+  showTab(location.hash.slice(1), true);
+
+  // ================= CÀI APP LÊN MÀN HÌNH CHÍNH =================
+  (function () {
+    var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (standalone) return;
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (ios) {
+      $("installText").textContent = "Mở trang này bằng Safari, bấm nút Chia sẻ rồi chọn \u201cThêm vào MH chính\u201d để dùng như một app.";
+      $("installBox").hidden = false;
+    }
+    var deferred = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault(); deferred = e;
+      $("installBox").hidden = false; $("installBtn").hidden = false;
+    });
+    $("installBtn").addEventListener("click", function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; $("installBox").hidden = true; });
+    });
+  })();
+
   renderMarket(); recompute(); renderPlan(); renderTasks(); showQ(); onPage();
   setInterval(function () { tick(); onPage(); }, 250);
   setInterval(function () { renderCounts(); renderMarket(); }, 60000);
@@ -1191,6 +1393,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
   function renderAccount() {
     var u = SRV.user;
     $("who").hidden = !u;
+    $("whoGuest").hidden = !!u;
     $("who").textContent = u ? (u.name || u.email) : "";
     $("acctBtn").textContent = u ? "Đăng xuất" : "Đăng nhập";
     $("adminLink").hidden = !(u && u.role === "admin");
@@ -1257,6 +1460,7 @@ canvas#weeks { display: block; width: 100%; max-width: 720px; }
     } catch (e) {}
   }
   window.__SERVER = S;
+  if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("/sw.js").catch(function () {}); } catch (e) {} }
   var s = document.createElement("script");
   s.textContent = document.getElementById("appScript").textContent;
   document.body.appendChild(s);

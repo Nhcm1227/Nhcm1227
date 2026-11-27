@@ -6,17 +6,13 @@ import { pathToFileURL } from 'node:url';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname);
 const PORT = Number(process.env.PORT || 3000);
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://local');
   try {
     if (url.pathname.startsWith('/api/')) {
-      const rel = url.pathname.replace(/\/$/, '');
-      if (rel.includes('..') || rel.includes('/_')) { res.statusCode = 404; return res.end(); }
-      const file = path.join(ROOT, rel + '.js');
-      await fs.access(file);
-      const mod = await import(pathToFileURL(file).href);
+      const mod = await import(pathToFileURL(path.join(ROOT, 'api/router.js')).href);
       return await mod.default(req, res);
     }
     let p = decodeURIComponent(url.pathname);

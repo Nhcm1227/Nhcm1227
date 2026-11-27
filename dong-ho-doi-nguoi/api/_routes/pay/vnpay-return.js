@@ -1,7 +1,7 @@
 // Người dùng được VNPAY đưa quay lại đây sau khi thanh toán.
-import { handle, allow, query, redirect } from '../_lib/http.js';
-import { getDoc } from '../_lib/store.js';
-import { providers, vnpVerify, orderPath, markPaid } from '../_lib/pay.js';
+import { handle, allow, query, redirect } from '../../_lib/http.js';
+import { getDoc } from '../../_lib/store.js';
+import { providers, vnpVerify, orderPath, markPaid } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'GET');

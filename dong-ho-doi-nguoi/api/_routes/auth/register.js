@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
-import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../_lib/http.js';
-import { putDoc, Conflict } from '../_lib/store.js';
-import { normEmail, emailPath, userPath, hashPassword, setSession, publicUser } from '../_lib/auth.js';
-import { TRIAL_DAYS, DAY } from '../_lib/plan.js';
+import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../../_lib/http.js';
+import { putDoc, Conflict } from '../../_lib/store.js';
+import { normEmail, emailPath, userPath, hashPassword, setSession, publicUser } from '../../_lib/auth.js';
+import { TRIAL_DAYS, DAY } from '../../_lib/plan.js';
 
 export default handle(async (req, res) => {
   allow(req, 'POST');

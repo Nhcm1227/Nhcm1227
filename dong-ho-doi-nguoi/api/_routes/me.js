@@ -1,7 +1,7 @@
-import { handle, allow, ok } from './_lib/http.js';
-import { currentUser, publicUser } from './_lib/auth.js';
-import { methods } from './_lib/pay.js';
-import { PRICE, PACKS } from './_lib/plan.js';
+import { handle, allow, ok } from '../_lib/http.js';
+import { currentUser, publicUser } from '../_lib/auth.js';
+import { methods } from '../_lib/pay.js';
+import { PRICE, PACKS } from '../_lib/plan.js';
 
 export default handle(async (req, res) => {
   allow(req, 'GET');

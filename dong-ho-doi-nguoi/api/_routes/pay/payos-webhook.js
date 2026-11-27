@@ -1,6 +1,6 @@
 // payOS gọi vào đây khi có người chuyển khoản xong.
-import { handle, allow, readJson, ok, send } from '../_lib/http.js';
-import { providers, payos, markPaid } from '../_lib/pay.js';
+import { handle, allow, readJson, ok, send } from '../../_lib/http.js';
+import { providers, payos, markPaid } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'POST');

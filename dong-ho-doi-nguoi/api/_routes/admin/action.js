@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
-import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../_lib/http.js';
-import { updateDoc } from '../_lib/store.js';
-import { requireAdmin, userPath, hashPassword, publicUser } from '../_lib/auth.js';
-import { addMonths, DAY } from '../_lib/plan.js';
+import { handle, allow, sameOrigin, readJson, ok, HttpError } from '../../_lib/http.js';
+import { updateDoc } from '../../_lib/store.js';
+import { requireAdmin, userPath, hashPassword, publicUser } from '../../_lib/auth.js';
+import { addMonths, DAY } from '../../_lib/plan.js';
 
 export default handle(async (req, res) => {
   allow(req, 'POST');

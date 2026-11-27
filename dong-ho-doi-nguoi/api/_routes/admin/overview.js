@@ -1,8 +1,8 @@
-import { handle, allow, ok, originOf } from '../_lib/http.js';
-import { listPaths, getMany, usingBlob } from '../_lib/store.js';
-import { requireAdmin } from '../_lib/auth.js';
-import { planOf, PRICE } from '../_lib/plan.js';
-import { providers } from '../_lib/pay.js';
+import { handle, allow, ok, originOf } from '../../_lib/http.js';
+import { listPaths, getMany, usingBlob } from '../../_lib/store.js';
+import { requireAdmin } from '../../_lib/auth.js';
+import { planOf, PRICE } from '../../_lib/plan.js';
+import { providers } from '../../_lib/pay.js';
 
 export default handle(async (req, res) => {
   allow(req, 'GET');
