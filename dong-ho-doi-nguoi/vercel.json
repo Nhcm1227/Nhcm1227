@@ -26,5 +26,6 @@
   ],
   "regions": [
     "sin1"
-  ]
+  ],
+  "buildCommand": "npm run build"
 }

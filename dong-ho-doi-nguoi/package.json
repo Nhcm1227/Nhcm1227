@@ -2,10 +2,13 @@
   "name": "dong-ho-doi-nguoi",
   "private": true,
   "type": "module",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "node dev-server.js",
-    "test": "node test/run.js"
+    "test": "node test/run.js",
+    "build": "[ -f public/index.html ] || (mkdir -p public && for f in index.html admin.html dieu-khoan.html; do curl -fsSL https://raw.githubusercontent.com/nhcm1227/nhcm1227/d8fcfd42975875ac5908a4074dbd80ba7c2f770f/dong-ho-doi-nguoi/public/$f -o public/$f || exit 1; done)"
   },
   "dependencies": {
     "@payos/node": "2.0.5",
